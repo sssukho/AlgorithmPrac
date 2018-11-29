@@ -1,80 +1,142 @@
-/*
- 배열 array의 i번째 숫자부터 j번째 숫자까지 자르고 정렬했을 때, k번째에 있는 수를 구하려 합니다.
- 
- 예를 들어 array가 [1, 5, 2, 6, 3, 7, 4], i = 2, j = 5, k = 3이라면
- 
- array의 2번째부터 5번째까지 자르면 [5, 2, 6, 3]입니다.
- 1에서 나온 배열을 정렬하면 [2, 3, 5, 6]입니다.
- 2에서 나온 배열의 3번째 숫자는 5입니다.
- 배열 array, [i, j, k]를 원소로 가진 2차원 배열 commands가 매개변수로 주어질 때, commands의 모든 원소에 대해 앞서 설명한 연산을 적용했을 때 나온 결과를 배열에 담아 return 하도록 solution 함수를 작성해주세요.
- 
- 제한사항
- array의 길이는 1 이상 100 이하입니다.
- array의 각 원소는 1 이상 100 이하입니다.
- commands의 길이는 1 이상 50 이하입니다.
- commands의 각 원소는 길이가 3입니다.
- 
- [1, 5, 2, 6, 3, 7, 4]를 2번째부터 5번째까지 자른 후 정렬합니다. [2, 3, 5, 6]의 세 번째 숫자는 5입니다.
- [1, 5, 2, 6, 3, 7, 4]를 4번째부터 4번째까지 자른 후 정렬합니다. [6]의 첫 번째 숫자는 6입니다.
- [1, 5, 2, 6, 3, 7, 4]를 1번째부터 7번째까지 자릅니다. [1, 2, 3, 4, 5, 6, 7]의 세 번째 숫자는 3입니다.*/
+//boggle 문제
 
-//입출력 예시
-//배열 입력 : [1, 5, 2, 6, 3, 7, 4]
-//명령어 입력 : [[2, 5, 3], [4, 4, 1], [1, 7, 3]]
-//출력 : [5, 6, 3]
+//입력
+/*
+ 1
+ URLPM
+ XPERT
+ GIAET
+ XTNZY
+ XOQRS
+ 6
+ PRETTY
+ GIRL
+ REPEAT
+ KARA
+ PANDORA
+ GIAZAPX
+ */
 
 #include <iostream>
-#include <vector>
-#include <algorithm>
+#include <string>
+#include <string.h>
 
 using namespace std;
 
-vector<int> solution(vector<int> array, vector<vector<int>> commands) {
-    vector<int> answer;
-    for (auto proc : commands)
-    {
-        int start = proc[0];
-        int end = proc[1];
-        int num = proc[2];
-        
-        vector<int>temp(end - start + 1);
-        for (int i = 0; i < end - start + 1;++i)
-        {
-            temp[i] = array[i + start-1];
-        }
-        sort(temp.begin(), temp.end());
-        answer.push_back(temp[num-1]);
-        
+char board[5][5]; // 입력받은 게임판
+int cache[5][5][10]; // 결과값들을 저장한다. memset으로 -1로 초기화 후 사용. 1:성공, 0:실패
+string word; //찾아야 할 단어
+
+/*
+ 핵심 재귀함수.
+ (y,x) 포인트에서 word Index에 해당하는 단어를 찾는다.
+ 성공시 1 리턴, 실패시 0 리턴.
+ 리턴 값들을 캐시에도 저장한다.
+ */
+int canFindWord(int y , int x, int wordIndex) {
+    /* 범위를 벗어날 경우 */
+    if((x > 4) || (x < 0) || (y > 4) || (y < 0)) {
+        return 0;
     }
     
-    return answer;
+    int& ret = cache[y][x][wordIndex]; //이 코드를 통해 ret == cache[y][x][wordIndex]가 된다.
+    
+    /* 캐시에 이미 결과가 계산되어 있으면, 추가로 계산하지 않고 그 값을 그대로 리턴(활용)한다. */
+    if(ret != -1) {
+        return ret;
+    }
+    
+    /* 여기부터 이 함수 끝까지가 실제 핵심 계산부 */
+    
+    /*
+     word Index에 해당하는 단어가, 현재 게임판에서 (y,x)에 있는 단어와 다른 경우. 이미 시작부터 글러먹은 경우. (첫글자부터 틀렸다) : 0을 리턴하며 그 값을 캐시에 저장한다.
+     */
+    if (word.at(wordIndex) != board[y][x]) {
+        return ret = 0;
+    }
+    
+    /*
+     여기까지 왔다는 것은, 게임판에서 현재 위치 (y,x)에 내가 찾으려는 단어의 첫글자가 있다는 것이다.
+     (비로소 시작할 수 있다.)
+     */
+    
+    wordIndex++; // 다음 글자(character)를 찾기 위해, index++
+    
+    /*
+     index가 범위를 벗어난 경우 (방금 전 index에 해당하는 끌자가 마지막 글자였던 것이다)
+     그렇다면 원하는 글자를 다 찾은 것이므로 : 1을 리턴하며 그 값을 캐시에 저장한다.
+     */
+    if (wordIndex >= word.size()) {
+        return ret = 1;
+    }
+    
+    /*
+     o o o
+     o 나 o
+     o o o
+     나(현재위치 y,x)를 기준으로 인접한 좌표 8개 모두를 재귀로 탐색한다.
+     그 중에 하나라도 찾게 된다면 성공한 것이므로 OR 연산을 시킨다.
+     : 결과적으로 0이나 1이 리턴되며 그 값을 캐시에 저장한다.
+     */
+    return ret = (
+    canFindWord(y - 1, x - 1, wordIndex) || canFindWord(y - 1, x, wordIndex) || canFindWord(y - 1, x + 1, wordIndex) ||
+                  canFindWord(y, x - 1, wordIndex) || canFindWord(y, x + 1, wordIndex) || canFindWord(y + 1, x - 1, wordIndex) ||
+                  canFindWord(y + 1, x, wordIndex) || canFindWord(y + 1, x + 1, wordIndex));
 }
 
 int main() {
-    vector<int> array;
-    vector<vector<int>> commands;
+    /* 테스트 케이스의 수 C */
+    int C;
+    scanf("%d\n", &C);
     
-    string inputArr;
-    string inputCmd;
-    
-    cin >> inputArr;
-    cin >> inputCmd;
-    
-    inputArr.erase(remove(inputArr.begin(), inputArr.end(), ' '), inputArr.end());
-    inputCmd.erase(remove(inputCmd.begin(), inputCmd.end(), ' '), inputCmd.end());
-    
-    for(int i = 0; i < inputArr.size(); i++) {
-        array.push_back(inputArr[i]);
-    }
-    
-    for(int i = 0; i < inputCmd.size(); i++) {
-        for(int j = 0; j < 3; j++) {
-            commands[i][j] = inputCmd[0*3+j];
+    for (int i = 0; i < C; i++) {
+        /* 게임판 (board[5][5]) 생성 */
+        for (int j = 0; j < 5; j++) {
+            scanf("%c%c%c%c%c\n", &board[j][0], &board[j][1], &board[j][2], &board[j][3], &board[j][4]);
+        }
+        
+        /* 찾을 단어의 수 N */
+        int N;
+        scanf("%d\n", &N);
+        
+        for (int j = 0; j < N; j++) {
+            memset(cache, -1, sizeof(cache));    // 단어를 찾는 루프를 돌 때마다 캐시를 -1로 초기화해준다.
+            
+            /* 찾을 단어 word */
+            word.clear();
+            getline(cin, word);
+            
+            bool isFound = false;
+            
+            /*
+             5X5 상의 모든 점을 대상으로 탐색한다.
+             발견시 isFound = true 하며, 이중 break로 완전히 탈출
+             */
+            for (int k = 0; k < 5; k++) {
+                for (int l = 0; l < 5; l++) {
+                    if (canFindWord(k, l, 0) == 1) {
+                        isFound = true;
+                        break;
+                    }
+                }
+                if (isFound) {
+                    break;
+                }
+            }
+            
+            /* 결과에 따른 출력 */
+            if (isFound) {
+                cout << word << " YES" << endl;
+            }
+            else {
+                cout << word << " NO" << endl;
+            }
         }
     }
     
-    vector<int> answer = solution(array, commands);
-    for(int i = 0; i < answer.size(); i++) {
-        cout << answer[i] << " ";
-    }
+    return 0;
 }
+
+
+ /* 출처: http://stroot.tistory.com/3 [CGun's Strong Root] */
+
