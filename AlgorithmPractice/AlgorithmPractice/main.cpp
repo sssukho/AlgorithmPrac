@@ -1,61 +1,54 @@
 #include <iostream>
-#include <algorithm>
-#include <cstring>
+#include <vector>
+#include <queue>
 
 using namespace std;
 
-#define MAX 51
+#define MAX 100001
 
-int T, M, N, K, X, Y; //테스트 케이스 수, 배추밭의 가로길이, 세로길이, 배추가 심어져 있는 위치의 개수 K, 배추의 위치 X, Y
-int edge[MAX][MAX];
-bool visited[MAX][MAX];
-int dy[4] = {1, -1, 0, 0};
-int dx[4] = {0, 0, 1, -1};
+int N, K; // 수빈이가 있는 위치 N, 동생이 있는 위치 K
+vector<bool> visited;
+int second = 0;
 
-void dfs(int y, int x) {
-    visited[y][x] = true;
-
-    for (int i = 0; i < 4; i++) {
-        int ny = y + dy[i];
-        int nx = x + dx[i];
-
-        if(ny < 0 || ny >= N || nx < 0 || nx >= M)
-            continue;
-
-        if(edge[ny][nx] && !visited[ny][nx]) {
-            visited[ny][nx] = 1;
-            dfs(ny, nx);
+void bfs() {
+    queue<int> q;
+    q.push(N);
+    
+    while(!q.empty()) {
+        int queSize = q.size();
+        
+        for(int i = 0 ; i < queSize; i++) {
+            int head = q.front();
+            q.pop();
+            
+            if(head == K)
+                return;
+            
+            if(head > 0 && visited[head-1] == 0) {
+                q.push(head-1);
+                visited[head-1] = 1;
+            }
+            
+            if(head < MAX-1 && visited[head+1] == 0) {
+                q.push(head+1);
+                visited[head+1] = 1;
+            }
+            
+            if(head * 2 <= MAX-1 && visited[head*2] == 0) {
+                q.push(head*2);
+                visited[head*2] =1;
+            }
         }
+        second = second + 1;
     }
 }
 
 int main() {
-
-    cin >> T;
-
-    for(int i = 0; i < T; i++) {
-        cin >> M >> N >> K;
-        memset(visited, false, sizeof(visited));
-        memset(edge, 0, sizeof(edge));
-
-        for(int j = 0; j < K; j++) {
-            cin >> X >> Y;
-            edge[Y][X] = 1;
-        }
-
-        int count = 0;
-        for(int j = 0; j < N; j++) {
-            for(int k = 0; k < M; k++) {
-                if(edge[j][k] == 1 && visited[j][k] == 0) {
-                    count++;
-                    dfs(j,k);
-
-                }
-
-            }
-        }
-        cout << count << "\n";
-    }
+    
+    cin >> N >> K;
+    visited.resize(MAX);
+    bfs();
+    cout << second << endl;
 
     return 0;
 }
