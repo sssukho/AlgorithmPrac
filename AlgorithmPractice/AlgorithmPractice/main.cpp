@@ -1,84 +1,61 @@
-//bfs, dfs 네트워크
-//https://programmers.co.kr/learn/courses/30/lessons/43162
-
 #include <iostream>
-#include <vector>
-#include <string>
+#include <algorithm>
+#include <cstring>
 
 using namespace std;
 
-#define MAX 201
+#define MAX 51
 
-int check[MAX] = {0};
-int net[MAX][MAX] = {0};
+int T, M, N, K, X, Y; //테스트 케이스 수, 배추밭의 가로길이, 세로길이, 배추가 심어져 있는 위치의 개수 K, 배추의 위치 X, Y
+int edge[MAX][MAX];
+bool visited[MAX][MAX];
+int dy[4] = {1, -1, 0, 0};
+int dx[4] = {0, 0, 1, -1};
 
-void DFS(int x, int n) {
-    check[x] = 1;
-    
-    for(int i = 0; i < n; i++) {
-        if(net[x][i] == 1 && check[i] == 0)
-            DFS(i, n);
-    }
-}
+void dfs(int y, int x) {
+    visited[y][x] = true;
 
-int solution(int n, vector<vector<int>> computers) {
-    int answer = 0;
-    
-    for(int i = 0; i < n; i++) {
-        for(int j = 0; j < n; j++) {
-            if(computers[i][j] == 1)
-                net[i][j] = 1;
+    for (int i = 0; i < 4; i++) {
+        int ny = y + dy[i];
+        int nx = x + dx[i];
+
+        if(ny < 0 || ny >= N || nx < 0 || nx >= M)
+            continue;
+
+        if(edge[ny][nx] && !visited[ny][nx]) {
+            visited[ny][nx] = 1;
+            dfs(ny, nx);
         }
     }
-    
-    for(int i = 0; i < n; i++) {
-        if(check[i] == 0) {
-            DFS(i, n);
-            answer = answer + 1;
-        }
-        
-    }
-    
-    return answer;
 }
-
 
 int main() {
-    vector<vector<int>> computer1;
-    vector<vector<int>> computer2;
-    
-    computer1.resize(3);
-    computer2.resize(3);
-    
-    //예제 1 인풋 세팅
-    computer1[0].push_back(1);
-    computer1[0].push_back(1);
-    computer1[0].push_back(0);
-    computer1[1].push_back(1);
-    computer1[1].push_back(1);
-    computer1[1].push_back(0);
-    computer1[2].push_back(0);
-    computer1[2].push_back(0);
-    computer1[2].push_back(1);
-    
-    //예제2 인풋 세팅
-    computer2[0].push_back(1);
-    computer2[0].push_back(1);
-    computer2[0].push_back(0);
-    computer2[1].push_back(1);
-    computer2[1].push_back(1);
-    computer2[1].push_back(1);
-    computer2[2].push_back(0);
-    computer2[2].push_back(1);
-    computer2[2].push_back(1);
-    
-    //예제1 출력
-    cout << solution(3, computer1) << endl;
-    cout << "--------------------------------" << endl;
-    
-    
-    //예제2 출력
-    //cout << solution(3, computer2) << endl;
-    
+
+    cin >> T;
+
+    for(int i = 0; i < T; i++) {
+        cin >> M >> N >> K;
+        memset(visited, false, sizeof(visited));
+        memset(edge, 0, sizeof(edge));
+
+        for(int j = 0; j < K; j++) {
+            cin >> X >> Y;
+            edge[Y][X] = 1;
+        }
+
+        int count = 0;
+        for(int j = 0; j < N; j++) {
+            for(int k = 0; k < M; k++) {
+                if(edge[j][k] == 1 && visited[j][k] == 0) {
+                    count++;
+                    dfs(j,k);
+
+                }
+
+            }
+        }
+        cout << count << "\n";
+    }
+
     return 0;
 }
