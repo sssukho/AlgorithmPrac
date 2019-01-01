@@ -1,54 +1,61 @@
 #include <iostream>
-#include <vector>
+#include <cstring>
 #include <queue>
 
 using namespace std;
 
-#define MAX 100001
+#define MAX 1001
 
-int N, K; // 수빈이가 있는 위치 N, 동생이 있는 위치 K
-vector<bool> visited;
-int second = 0;
+int N, M, V; // 정점의 개수 N, 간선의 개수 M, 탐색을 시작할 정점의 번호 V
+int u, v; //u는 시작 정점, v는 도착 정점.
 
-void bfs() {
+int edge[MAX][MAX];
+bool visited[MAX];
+
+void dfs(int cur) {
+    visited[cur] = true;
+    
+    cout << cur << " ";
+    
+    for(int i = 1; i <= N; i++) {
+        if(edge[cur][i] == 1 && !visited[i])
+            dfs(i);
+    }
+}
+
+void bfs(int cur) {
     queue<int> q;
-    q.push(N);
+    visited[cur] = true;
+    q.push(cur);
     
     while(!q.empty()) {
-        int queSize = q.size();
-        
-        for(int i = 0 ; i < queSize; i++) {
-            int head = q.front();
-            q.pop();
-            
-            if(head == K)
-                return;
-            
-            if(head > 0 && visited[head-1] == 0) {
-                q.push(head-1);
-                visited[head-1] = 1;
-            }
-            
-            if(head < MAX-1 && visited[head+1] == 0) {
-                q.push(head+1);
-                visited[head+1] = 1;
-            }
-            
-            if(head * 2 <= MAX-1 && visited[head*2] == 0) {
-                q.push(head*2);
-                visited[head*2] =1;
+        int currentNode = q.front();
+        q.pop();
+        cout << currentNode << " ";
+        for(int i = 1; i <= N; i++) {
+            if(edge[currentNode][i] == 1 && !visited[i]) {
+                visited[i] = true;
+                q.push(i);
             }
         }
-        second = second + 1;
     }
 }
 
 int main() {
+    cin.tie(NULL);
+    ios::sync_with_stdio("False");
     
-    cin >> N >> K;
-    visited.resize(MAX);
-    bfs();
-    cout << second << endl;
-
-    return 0;
+    cin >> N >> M >> V;
+    
+    for(int i = 0; i < M; i++) {
+        cin >> u >> v;
+        edge[u][v] = 1;
+        edge[v][u] = 1;
+    }
+    
+    dfs(V);
+    memset(visited, false, sizeof(visited));
+    cout << "\n";
+    bfs(V);
+    
 }
