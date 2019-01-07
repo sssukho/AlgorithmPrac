@@ -1,59 +1,96 @@
-// Greedy(탐욕법)
-// https://programmers.co.kr/learn/courses/30/lessons/42884
+// 백준 2667번 flood fill
+// https://www.acmicpc.net/problem/2667
 
 /*
- 고속도로를 이동하는 모든 차량이 고속도로를 이용하면서 단속용 카메라를 한 번은 만나도록 카메라를 설치하려고 합니다.
+ <그림 1>과 같이 정사각형 모양의 지도가 있다. 1은 집이 있는 곳을, 0은 집이 없는 곳을 나타낸다. 철수는 이 지도를 가지고 연결된 집들의 모임인 단지를 정의하고, 단지에 번호를 붙이려 한다. 여기서 연결되었다는 것은 어떤 집이 좌우, 혹은 아래위로 다른 집이 있는 경우를 말한다. 대각선상에 집이 있는 경우는 연결된 것이 아니다. <그림 2>는 <그림 1>을 단지별로 번호를 붙인 것이다. 지도를 입력하여 단지수를 출력하고, 각 단지에 속하는 집의 수를 오름차순으로 정렬하여 출력하는 프로그램을 작성하시오.
  
- 고속도로를 이동하는 차량의 경로 routes가 매개변수로 주어질 때, 모든 차량이 한 번은 단속용 카메라를 만나도록 하려면 최소 몇 대의 카메라를 설치해야 하는지를 return 하도록 solution 함수를 완성하세요.
+ [입력]
+ 첫 번째 줄에는 지도의 크기 N(정사각형이므로 가로와 세로의 크기는 같으며 5≤N≤25)이 입력되고, 그 다음 N줄에는 각각 N개의 자료(0혹은 1)가 입력된다.
+7
+0 1 1 0 1 0 0
+0 1 1 0 1 0 1
+1 1 1 0 1 0 1
+0 0 0 0 1 1 1
+0 1 0 0 0 0 0
+0 1 1 1 1 1 0
+0 1 1 1 0 0 0
  
- [제한사항]
- 차량의 대수는 1대 이상 10,000대 이하입니다.
- routes에는 차량의 이동 경로가 포함되어 있으며 routes[i][0]에는 i번째 차량이 고속도로에 진입한 지점, routes[i][1]에는 i번째 차량이 고속도로에서 나간 지점이 적혀 있습니다.
- 차량의 진입/진출 지점에 카메라가 설치되어 있어도 카메라를 만난것으로 간주합니다.
- 차량의 진입 지점, 진출 지점은 -30,000 이상 30,000 이하입니다.
- 
- input : [[-20,15], [-14,-5], [-18,-13], [-5,-3]]  /  return : 2
- 
- -5 지점에 카메라를 설치하면 두 번째, 네 번째 차량이 카메라를 만납니다.
- 
- -15 지점에 카메라를 설치하면 첫 번째, 세 번째 차량이 카메라를 만납니다.
+ [출력]
+ 첫 번째 줄에는 총 단지수를 출력하시오. 그리고 각 단지내 집의 수를 오름차순으로 정렬하여 한 줄에 하나씩 출력하시오.
+ 3
+ 7
+ 8
+ 9
  */
 
 #include <iostream>
 #include <vector>
-#include <string>
+#include <cstring>
+#include <algorithm>
 
 using namespace std;
 
-#define MAX 100
+#define MAX 26
 
-bool cmp(vector<int> a, vector<int> b) { return a[1] < b[1]; }
+int N; // 정사각형 크기
+int edge[MAX][MAX];
+bool visited[MAX][MAX];
 
-int solution(vector<vector<int>> routes) {
-    int answer = 0;
-    int limit = -30001;
-    sort(routes.begin(), routes.end(), cmp);
-    for(int i = 0; i < routes.size(); i++){
-        if(limit < routes[i][0]){
-            answer++;
-            limit = routes[i][1];
+int groupCount = 0; // 단지 수
+int homeCount = 0; // 단지 안에 있는 집 수
+
+vector<int> sortedHomeCount; // 오름차순으로 정렬할 때 필요한 템플릿
+
+int dy[4] = {1, -1, 0, 0};
+int dx[4] = {0, 0, 1, -1};
+
+void dfs(int y, int x) {
+    visited[y][x] = true;
+    
+    for(int i = 0; i < 4; i++) {
+        int my = y + dy[i];
+        int mx = x + dx[i];
+        
+        if(my >= 0 && my < N && mx >= 0 && mx < N) {
+            if(edge[my][mx] == 1 && !visited[my][mx]) {
+                homeCount = homeCount + 1;
+                dfs(my, mx);
+            }
         }
     }
-    return answer;
 }
 
 int main() {
-    vector<vector<int> > routes;
-    routes.resize(MAX);
-
-    routes[0].push_back(-20);
-    routes[0].push_back(15);
-    routes[1].push_back(-14);
-    routes[1].push_back(-5);
-    routes[2].push_back(-18);
-    routes[2].push_back(-13);
-    routes[3].push_back(-5);
-    routes[3].push_back(-3);
-
-    cout << solution(routes) << endl;
+    cout << "start" << endl;
+    
+    cin.tie(NULL);
+    ios::sync_with_stdio("False");
+    
+    scanf("%d", &N);
+    
+    for(int i = 0; i < N; i++) {
+        for(int j = 0; j < N; j++) {
+            scanf("%1d", &edge[i][j]);
+        }
+    }
+    
+    for(int i = 0; i < N; i++) {
+        for(int j = 0; j < N; j++) {
+            if(edge[i][j] == 1 && !visited[i][j]) {
+                homeCount++;
+                dfs(i, j);
+                groupCount++;
+                sortedHomeCount.push_back(homeCount);
+            }
+            homeCount = 0;
+        }
+    }
+    
+    sort(sortedHomeCount.begin(), sortedHomeCount.end());
+    
+    cout << groupCount << endl;
+    for(auto x : sortedHomeCount) {
+        cout << x << endl;
+    }
+    
 }
