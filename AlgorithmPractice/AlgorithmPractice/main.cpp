@@ -1,63 +1,105 @@
-/*
- 정수 X에 사용할 수 있는 연산은 다음과 같이 세 가지 이다.
- 
- 1. X가 3으로 나누어 떨어지면, 3으로 나눈다.
- 2. X가 2로 나누어 떨어지면, 2로 나눈다.
- 3. 1을 뺀다.
- 정수 N이 주어졌을 때, 위와 같은 연산 세 개를 적절히 사용해서 1을 만들려고 한다. 연산을 사용하는 횟수의 최솟값을 출력하시오.
- 
- 입력
- 첫째 줄에 1보다 크거나 같고, 106보다 작거나 같은 정수 N이 주어진다.
- 
- 출력
- 첫째 줄에 연산을 하는 횟수의 최솟값을 출력한다.
- */
- 
-
 #include <iostream>
-#include <algorithm>
+#include <queue>
 #include <cstring>
+#include <algorithm>
 
 using namespace std;
-#define MAX 1000001
 
-int N;
+#define MAX 1001
 
-int cache[MAX];
+int N, M; //세로, 가로
+int dy[4] = {1, -1, 0, 0};
+int dx[4] = {0, 0, 1, -1};
 
-int solution(int num, int cnt) {
-    //base case
-    if(num == 1)
-        return cnt;
-    //N이 3으로 나누어 떨어지면 3으로 나눈다.
-    else if(num % 3 == 0)
-        solution(num/3, cnt++);
-    //N이 2로 나누어 떨어지면 2로 나눈다.
-    else if(num % 2 == 0)
-        solution(num/2, cnt++);
-    //N에서 1을 뺀다.
-    else
-        solution(num-1, cnt++);
+int edge[MAX][MAX];
+int visited[MAX][MAX];
+
+int emptyCell = 0;
+int ripped = 0;
+int basketSize;
+
+queue<pair<int, int>> q;
+
+bool allRipped() {
+    int cnt = 0;
     
-    return cnt;
+    for(int i = 0 ; i < N; i++) {
+        for(int j = 0; j< M; j++) {
+            if(edge[i][j] == 1)
+                cnt++;
+        }
+    }
+    
+    if(cnt == basketSize-emptyCell)
+        return true;
+    
+    return false;
+}
+
+int bfs() {
+    int dayCnt = 0;
+    
+    while(!q.empty()) {
+        int queSize = q.size();
+        
+        for(int i = 0; i < queSize; i++) {
+            int y = q.front().first;
+            int x = q.front().second;
+            q.pop();
+            for(int j = 0; j < 4; j++) {
+                int my = y + dy[j];
+                int mx = x + dx[j];
+                
+                if(my >= 0 && my < N && mx >= 0 && mx < M) {
+                    if(edge[my][mx] == 0) {
+                        edge[my][mx] = 1;
+                        q.push(make_pair(my, mx));
+                    }
+                    
+                }
+            }
+            //하나도 남김없이 다 익었는지
+            if(q.size() == 0 && allRipped())
+                return dayCnt;
+            
+            //익힐거는 다 익혔는데 익힐 수 없는거 있으면
+            if(q.size() == 0 && !allRipped())
+                return -1;
+        }
+        dayCnt++;
+    }
+    
+    
+    
+    return dayCnt;
 }
 
 int main() {
     cout << "start" << endl;
     cin.tie(NULL);
     ios::sync_with_stdio("False");
-    cin >> N;
     
-    cache[1] = 0;
-    for(int i = 2; i <= N; i++) {
-        cache[i] = cache[i-1] + 1;
-        if(i % 3 == 0)
-            cache[i] = min(cache[i], cache[i/3]+1);
-        else if(i % 2 == 0)
-            cache[i] = min(cache[i], cache[i/2]+1);
+    cin >> M >> N;
+    
+    for(int i = 0; i < N; i++) {
+        for(int j = 0; j < M; j++) {
+            cin >> edge[i][j];
+            if(edge[i][j] == -1)
+                emptyCell++;
+            if(edge[i][j] == 1) {
+                ripped++;
+                q.push(make_pair(i, j));
+            }
+        }
     }
     
-    cout << cache[N] << endl;
+    basketSize = N * M;
+    if(basketSize-emptyCell == ripped) {
+        cout << 0 << endl;
+        return 0;
+    }
+    
+    cout << bfs() << endl;
     
     return 0;
 }
