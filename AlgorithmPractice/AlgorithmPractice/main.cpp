@@ -1,82 +1,68 @@
-/*
- 입력의 첫째 줄에는 테스트 케이스의 개수가 주어진다.
- 
- 각 테스트 케이스는 세 줄로 이루어져 있다. 첫째 줄에는 체스판의 한 변의 길이 l(4 ≤ l ≤ 300)이 주어진다. 체스판의 크기는 l × l이다. 체스판의 각 칸은 두 수의 쌍 {0, ..., l-1} × {0, ..., l-1}로 나타낼 수 있다. 둘째 줄과 셋째 줄에는 나이트가 현재 있는 칸, 나이트가 이동하려고 하는 칸이 주어진다.
- */
+//https://programmers.co.kr/learn/courses/30/lessons/12977
+//프로그래머스 2017 서머코딩 소수 만들기
 
+#include <vector>
 #include <iostream>
-#include <queue>
+#include <cmath>
 #include <algorithm>
 #include <cstring>
 
 using namespace std;
 
-#define MAX 301
-#define INF 987654321
+#define MAX 3000
+bool isPrime[MAX];
 
-int T; //테스트 케이스 수
-int L; //체스판의 한 변의 길이
-
-bool visited[MAX][MAX];
-int cache[MAX][MAX];
-int cy, cx; //나이트가 현재 있는 칸
-int my, mx; //나이트가 이동하려고 하는 칸
-
-int dy[8] = {2, 2, -2, -2, 1, 1, -1, -1};
-int dx[8] = {1, -1, 1, -1, 2, -2, 2, -2};
-
-void initCache() {
-    for(int i = 0; i < MAX; i++)
-        for(int j = 0 ; j < MAX; j++)
-            cache[i][j] = INF;
+void eratosthenes() {
+    for(int i = 2; i <= MAX; i++){
+        isPrime[i] = true;
+    }
+    
+    int sqrtn = sqrt(MAX);
+    
+    for(int i = 2; i <= sqrtn; i++) {
+        if(isPrime[i]){
+            for(int j = i + i; j <= MAX; j=j+i) {
+                isPrime[j] = false;
+            }
+        }
+    }
 }
 
-int bfs(int curY, int curX) {
-    initCache();
+int solution(vector<int> nums) {
+    int answer = 0;
     
-    queue<pair<int, int>> q;
-    q.push(make_pair(curY, curX));
-    cache[curY][curX] = 0;
+    eratosthenes();
     
-    while(!q.empty()) {
-        int y = q.front().first;
-        int x = q.front().second;
-        q.pop();
-        
-        if(y == my && x == mx)
-            return cache[y][x];
-        
-        for(int i = 0; i < 8; i++) {
-            int yy = y + dy[i];
-            int xx = x + dx[i];
-            
-            if(yy >= 0 && yy < L && xx >= 0 && xx < L) {
-                if(!visited[yy][xx]) {
-                    visited[yy][xx] = true;
-                    q.push(make_pair(yy, xx));
-                    cache[yy][xx] = min(cache[yy][xx], cache[y][x] + 1);
-                }
+    for(int i = 0; i < nums.size(); i++) {
+        for(int j = i+1; j < nums.size(); j++) {
+            for(int k = j+1; k < nums.size(); k++) {
+                int sum = nums[i] + nums[j] + nums[k];
+                if(isPrime[sum])
+                    answer++;
             }
         }
     }
     
-    return 0;
+    return answer;
 }
 
 int main() {
-    cout << "start" << endl;
-    cin.tie(NULL);
-    ios::sync_with_stdio("False");
+    vector<int> nums1;
+    vector<int> nums2;
     
-    cin >> T;
-    for(int i = 0; i < T; i++) {
-        memset(visited, false, sizeof(visited));
-        
-        cin >> L;
-        cin >> cy >> cx;
-        cin >> my >> mx;
-        
-        cout << bfs(cy, cx) << endl;
-    }
+    nums1.push_back(1);
+    nums1.push_back(2);
+    nums1.push_back(3);
+    nums1.push_back(4);
+    
+    nums2.push_back(1);
+    nums2.push_back(2);
+    nums2.push_back(7);
+    nums2.push_back(6);
+    nums2.push_back(4);
+    
+    cout << solution(nums1) << endl;
+    cout << solution(nums2) << endl;
+    
     return 0;
 }
