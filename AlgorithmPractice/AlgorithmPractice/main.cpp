@@ -1,76 +1,65 @@
 /*
- <문제 설명>
- 출발지점부터 distance만큼 떨어진 곳에 도착지점이 있습니다. 그리고 그사이에는 바위들이 놓여있습니다. 바위 중 몇 개를 제거하려고 합니다.
- 예를 들어, 도착지점이 25만큼 떨어져 있고, 바위가 [2, 14, 11, 21, 17] 지점에 놓여있을 때 바위 2개를 제거하면 출발지점, 도착지점, 바위 간의 거리가 아래와 같습니다.
- 
- 제거한 바위의 위치    각 바위 사이의 거리    거리의 최솟값
- [21, 17]         [2, 9, 3, 11]      2
- [2, 21]          [11, 3, 3, 8]      3
- [2, 11]          [14, 3, 4, 4]      3
- [11, 21]         [2, 12, 3, 8]      2
- [2, 14]          [11, 6, 4, 4]      4
- 위에서 구한 거리의 최솟값 중에 가장 큰 값은 4입니다.
- 
- 출발지점부터 도착지점까지의 거리 distance, 바위들이 있는 위치를 담은 배열 rocks, 제거할 바위의 수 n이 매개변수로 주어질 때, 바위를 n개 제거한 뒤 각 지점 사이의 거리의 최솟값 중에 가장 큰 값을 return 하도록 solution 함수를 작성해주세요.
- 
- <제한사항>
- 도착지점까지의 거리 distance는 1 이상 1,000,000,000 이하입니다.
- 바위는 1개 이상 50,000개 이하가 있습니다.
- n 은 1 이상 바위의 개수 이하입니다.
- 
- <입출력 예>
- distance    rocks                 n    return
- 25         [2, 14, 11, 21, 17]    2    4
+ -> 부모를 통해 자식의 조상 관련 수치 값을 얻어 비교하는 bfs
+ -> string name을 key 값을 잡고 관련 수치를 value 값으로 잡아 map을 이용함
+ -> 유토피아를 세운 사람의 자식 외의 사람은 다 0.
+ -> 처음에 유토피아를 세운 사람만 1로 시작하여 그 밑에 자식들만 queue에 넣어줌.
  */
 
 #include <iostream>
-#include <algorithm>
+#include <queue>
 #include <string>
-#include <vector>
+#include <map>
+
 using namespace std;
 
-int solution(int distance, vector<int> rocks, int n) {
-    int answer = 0;
-    
-    sort(rocks.begin(), rocks.end());
-    
-    int low = 0;
-    int high = 1000000001;
+int N, M;
+string root;
+map<string, double> p;
 
-    for(int i = 0; i < 100; i++) {
-        int middle = (low+high) / 2;
-        int limit = 0;
-        int remove = 0;
-        
-        for(int j = 0; j < rocks.size(); j++) {
-            if(rocks[j] - limit < middle)
-                remove++;
-            else
-                limit = rocks[j];
-        }
-        
-        if(remove > n)
-            high = middle;
-        else
-            low = middle;
-    }
-    
-    answer = low;
-    return answer;
-}
+string arr[50][3];
 
 int main() {
-    int distance = 25;
-    int n = 2;
+    cout << "start" << endl;
+    cin.tie(NULL);
+    ios::sync_with_stdio("False");
     
-    vector<int> rocks;
-    rocks.push_back(2);
-    rocks.push_back(14);
-    rocks.push_back(11);
-    rocks.push_back(21);
-    rocks.push_back(17);
+    cin >> N >> M;
+    cin >> root;
     
-    cout << solution(distance, rocks, n) << endl;
+    for(int i = 0; i < N; i++) {
+        string a, b, c;
+        cin >> a >> b >> c;
+        p.insert(make_pair(a, 0)); //자식이름, 수치
+        arr[i][0] = a, arr[i][1] = b, arr[i][2] = c; //가족 정보(자식 이름, 부모 두명)
+    }
     
+    p[root] = 1; //유토피아를 세운 사람의 value를 1로 잡음.
+    queue<string> q;
+    q.push(root);
+    while(!q.empty()) {
+        int queSize = q.size();
+        for(int k = 0; k < queSize; k++) {
+            string name = q.front();
+            q.pop();
+            for(int i = 0; i < N; i++) {
+                if(arr[i][1] == name || arr[i][2] == name) {
+                    p[arr[i][0]] = (p[arr[i][1]] + p[arr[i][2]]) / 2;
+                    q.push(arr[i][0]);
+                }
+            }
+        }
+    }
+    
+    double mx = -1;
+    string result;
+    for(int i = 0; i < M; i++) {
+        string s;
+        cin >> s;
+        if(p[s] > mx) {
+            result = s;
+            mx = p[s];
+        }
+    }
+    cout << result << "\n";
     return 0;
 }
