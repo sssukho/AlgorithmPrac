@@ -1,30 +1,63 @@
-/*
- -> dfs 혹은 bfs로 단지번호를 붙이고 단지 최대 갯수 출력
- -> 벽을 허무는 경우를 벽마다 일일이 검사하는 것보다 붙어있는 단지번호가 서로 다를 경우
-    서로 다른 수일 경우 두개의 단지 개수를 합한 것이 벽 1개를 허물고 만들 수 있는 벽의 크기가 될 수 있음 (벽을 허물고 단지 번호 다시 붙이는 것보다 빠름)
- -> 서로 붙어있지만 다른 단지번호의 합 중에 최고가 벽을 허물고 만들 수 있는 최대 벽의 크기
- */
-
+//# 은 금으로 막혀있어 지나갈 수 없는 칸
+//. 비어있는 칸은
+//시작지점은 'S'로 표현
+//탈출 출구는 'E'
+//각 층 사이에는 빈줄이 있으며, 입력의 끝은 L,R,C가 모두 0으로 표현된다.
 #include <iostream>
+#include <algorithm>
+#include <cstring>
+#include <string>
+#include <queue>
 using namespace std;
+#define MAX 31
 
-int n, m, map[51][51], visit[51][51], mx, add, arr[2500];
-int dx[] = {0, -1, 0, 1};
-int dy[] = {-1, 0, 1, 0};
+int L,R,C; //빌딩의 층수, 세로, 가로
+char building[MAX][MAX][MAX]; //층수, 세로, 가로
+bool visited[MAX][MAX][MAX]; //층수, 세로, 가로
+int time_building[MAX][MAX][MAX];
 
-void dfs(int x, int y, int num) {
-    visit[x][y] = num;
-    for(int i = 0; i < 4; i++) {
+int dh[6] = {1, -1, 0, 0, 0, 0};
+int dy[6] = {0, 0, 1, -1, 0, 0};
+int dx[6] = {0, 0, 0, 0, 1, -1};
+int currentH;
+int currentY;
+int currentX;
+int destH;
+int destY;
+int destX;
+
+void bfs() {
+    queue<pair<int, pair<int, int>>> q; //층수, y, x
+    q.push(make_pair(currentH, make_pair(currentY, currentX)));
+    
+    while(!q.empty()) {
+        int h = q.front().first;
+        int y = q.front().second.first;
+        int x = q.front().second.second;
+        q.pop();
         
-        if((map[x][y] & (1<<i)) == 0) { //벽이 없는 경우
-            int mx = x + dx[i];
-            int my = y + dy[i];
-            
-            if(mx < 0 || mx >= m || my < 0 || my >= n || visit[mx][my] != 0)
-                continue;
-            dfs(mx, my, num);
+        if(h == destH && y == destY && x == destX) {
+            cout << "Escaped in " << time_building[h][y][x] << " minute(s).\n";
+            return;
         }
+        
+        for(int k = 0; k < 6; k++) {
+            int mh = h + dh[k];
+            int my = y + dy[k];
+            int mx = x + dx[k];
+            
+            if(mh >= 0 && mh < L && my >= 0 && my < R && mx >= 0 && mx < C) {
+                if((!visited[mh][my][mx] && building[mh][my][mx] == '.') || building[mh][my][mx] == 'E') {
+                    visited[mh][my][mx] = true;
+                    q.push(make_pair(mh, make_pair(my, mx)));
+                    time_building[mh][my][mx] = time_building[h][y][x] + 1;
+                }
+            }
+        }
+        
     }
+    
+    cout << "Trapped!\n";
 }
 
 int main() {
@@ -32,57 +65,34 @@ int main() {
     cin.tie(NULL);
     ios::sync_with_stdio("False");
     
-    cin >> n >> m;
-    
-    for(int i = 0; i < m; i++) {
-        for(int j = 0; j < n; j++) {
-            cin >> map[i][j];
-        }
-    }
-    
-    //단지 번호 붙이기
-    int num = 1;
-    for(int i = 0; i < m; i++) {
-        for(int j = 0; j < n; j++) {
-            if(visit[i][j] == 0) {
-                dfs(i, j, num);
-                num++;
-            }
-        }
-    }
-    
-    //최대 단지 개수 구하기
-    num -= 1; mx = 0; add = 0;
-    for(int i = 0; i < m; i++) {
-        for(int j = 0; j < n; j++) {
-            arr[visit[i][j]]++;
-        }
-    }
-    
-    for(int i=1; i <= num; i++) {
-        if(mx<arr[i]) {
-            mx = arr[i];
-        }
-    }
-    
-    //붙어있는 단지 비교하기
-    for(int i = 0; i < m; i++) {
-        for(int j = 0; j < n; j++) {
-            for(int k = 0; k < 4; k++) {
-                int tx = i + dx[k];
-                int ty = j + dy[k];
-                
-                if(tx >= 0 && tx < m && ty >= 0 && ty < n) {
-                    if(visit[i][j] != visit[tx][ty]) {
-                        int a = arr[visit[i][j]] + arr[visit[tx][ty]];
-                        if(add < a)
-                            add = a;
+    while(true) {
+        memset(building, 0, sizeof(building));
+        memset(visited, false, sizeof(visited));
+        memset(time_building, 0, sizeof(time_building));
+        
+        //cin >> L >> R >> C;
+        scanf("%d %d %d", &L, &R, &C);
+        if(L == 0 && R == 0 && C == 0)
+            return 0;
+        
+        for(int i = 0; i < L; i++) {
+            for(int j = 0; j < R; j++) {
+                for(int k = 0; k < C; k++) {
+                    cin >> building[i][j][k];
+                    if(building[i][j][k] == 'S') {
+                        currentH = i;
+                        currentY = j;
+                        currentX = k;
+                    }
+                    if(building[i][j][k] == 'E') {
+                        destH = i;
+                        destY = j;
+                        destX = k;
                     }
                 }
             }
         }
+        
+        bfs();
     }
-    
-    cout << num << "\n" << mx << "\n" << add << "\n";
-    return 0;
 }
