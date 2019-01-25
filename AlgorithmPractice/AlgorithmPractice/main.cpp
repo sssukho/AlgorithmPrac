@@ -1,114 +1,91 @@
 #include <iostream>
-#include <queue>
+#include <vector>
 #include <string>
-#include <cstring>
-
 using namespace std;
-#define MAX 50
 
-int R, C; //세로 가로
-string map[MAX];
-int time_way[MAX][MAX] = { 0, };
+string T, P;
 
-int dy[4] = { 1, -1, 0, 0 };
-int dx[4] = { 0, 0, 1, -1 };
-
-int startY, startX;
-int destY, destX;
-
-queue<pair<int, int>> coord;
-
-void makeWater() {
-    int coordSize = (int)coord.size();
+//N에서 자기 자신을 찾으면서 나타나는 부분 일치를 이용해 pi[] 계산
+//pi[i] = N[..i]의 접미사도 되고 접두사도 되는 문자열의 최대 길이
+vector<int> getPartialMatch(const string &N)
+{
+    int M = (int)N.size();
+    vector<int> pi(M, 0);
     
-    for (int i = 0; i < coordSize; i++) {
-        int y = coord.front().first;
-        int x = coord.front().second;
-        coord.pop();
-        
-        for (int i = 0; i < 4; i++) {
-            int my = y + dy[i];
-            int mx = x + dx[i];
-            
-            if (my >= 0 && my < R && mx >= 0 && mx < C) {
-                if (map[my][mx] != 'X' && map[my][mx] != 'D' && map[my][mx] != '*') {//S도 될수 있음
-                    map[my][mx] = '*';
-                    coord.push(make_pair(my, mx));
-                }
+    //KMP로 자기 자신을 찾는다
+    //N을 N에서 찾는다.
+    //begin=0이면 자기 자신을 찾아버리니까 안됨!
+    int begin = 1, matched = 0;
+    
+    //비교할 문자가 N의 끝에 도달할 때까지 찾으면서 부분 일치를 모두 기록한다
+    while (begin + matched < M)
+    {
+        if (N[begin + matched] == N[matched])
+        {
+            matched++;
+            pi[begin + matched - 1] = matched;
+        }
+        else
+        {
+            if (matched == 0)
+                begin++;
+            else
+            {
+                begin += matched - pi[matched - 1];
+                matched = pi[matched - 1];
             }
         }
     }
+    
+    return pi;
 }
 
-bool bfs() {
-    queue<pair<int, int>> q;
-    q.push(make_pair(startY, startX));
+vector<int> kmpSearch2(const string &H, const string &N)
+{
+    int n = (int)H.size(), m = (int)N.size();
     
-    time_way[startY][startX] = 1;
-    makeWater();
+    vector<int> result;
+    vector<int> pi = getPartialMatch(N);
     
-    int qn = (int)q.size();
+    //현재 대응된 글자의 수
+    int matched = 0;
     
-    while (!q.empty()) {
-        int y = q.front().first;
-        int x = q.front().second;
-        q.pop();
-        
-        if (y == destY && x == destX)
-            return true;
-        
-        for (int i = 0; i < 4; i++) {
-            int my = y + dy[i];
-            int mx = x + dx[i];
-            
-            if (my >= 0 && my < R && mx >= 0 && mx < C) {
-                if(time_way[my][mx]==0){
-                    if (map[my][mx] == '.' || map[my][mx] == 'D') {
-                        time_way[my][mx] = time_way[y][x] + 1;
-                        q.push(make_pair(my, mx));
-                    }
-                }
+    //짚더미의 각 글자를 순회
+    for (int i = 0; i < n; i++)
+    {
+        //matched번 글자와 짚더미의 해당 글자가 불일치할 경우,
+        //현재 대응된 글자의 수를 pi[matched-1]로 줄인다
+        while (matched > 0 && H[i] != N[matched])
+            matched = pi[matched - 1];
+        //글자가 대응될 경우
+        if (H[i] == N[matched])
+        {
+            matched++;
+            if (matched == m)
+            {
+                //문제에서 인덱스는 0이 아닌 1부터 시작
+                result.push_back(i - m + 2);
+                matched = pi[matched - 1];
             }
         }
-        
-        //1초... 큐마다 도는게 아니라..
-        qn--;
-        if (qn == 0) {
-            qn = (int)q.size();
-            makeWater();
-        }
     }
-    
-    return false;
+
+    return result;
 }
 
-int main() {
-    cin.tie(NULL);
-    ios::sync_with_stdio("False");
-    
-    cin >> R >> C;
-    
-    for (int i = 0; i < R; i++) {
-        cin >> map[i];
-        
-        for (int j = 0; j < C; j++) {
-            if (map[i][j] == 'S') {
-                startY = i;
-                startX = j;
-            }
-            if (map[i][j] == 'D') {
-                destY = i;
-                destX = j;
-            }
-            if (map[i][j] == '*') {
-                coord.push(make_pair(i, j));
-            }
-        }
-    }
-    if (bfs())
-        cout << time_way[destY][destX]-1;
-    else
-        cout << "KAKTUS";
+int main(void)
+{
+    ios_base::sync_with_stdio(0);
+    cin.tie(0); //cin 속도 향상 위해
+    getline(cin, T); //공백 포함해서 입력받기 위해
+    getline(cin, P);
+
+    vector<int> result = kmpSearch2(T, P);
+    //endl 쓰면 시간 초과
+    cout << result.size() << "\n";
+
+    for (int i = 0; i < result.size(); i++)
+        cout << result[i] << "\n";
     
     return 0;
 }
