@@ -12,38 +12,36 @@
  */
 
 #include <iostream>
-#include <algorithm>
+#include <cstring>
 using namespace std;
 
-int N;
-int map[15];
+int n;
+bool *arr; //열의 개수 (세로 개수)
+bool *d1; //오른쪽 위를 향하는 대각(각 자리의 합) = (2n-1)개
+bool *d2; //오른쪽 아래를 향하는 대각 {(n-1) + (행-열) 로 구분}
 int result = 0;
 
-bool promising(int i) {
-    for(int j =0; j < i; j++) {
-        //새로운 퀸과 기존의 퀸이 같은 행에 있거나 대각선에 있을 경우
-        if(map[j] == map[i] || abs(map[i]-map[j]) == (i-j))
-            return false;
+void Solution(int y) {
+    if(y >= n) result++;
+    
+    for(int i = 0; i < n; i++) {
+        if(arr[i]) continue; //arr[i]가 존재하면 continue;
+        if(d1[y+i] || d2[n-1+(y-i)]) continue; //대각선상에 존재하면 continue;
+        
+        arr[i] = d1[y+i] = d2[n-1 + (y-i)] = true; //체크하고
+        Solution(y+1); //아래 행으로 넘어감
+        arr[i] = d1[y+i] = d2[n-1+(y-i)] = false; //백트랙킹 조건
     }
-    return true;
-}
-
-void N_Queen(int i) {
-   if(i == N)
-       result++;
-   else {
-       for(int j = 0; j < N; j++) {
-           map[i] = j;
-           if(promising(i))
-               N_Queen(i+1);
-       }
-   }
 }
 
 int main() {
     cout << "start" << endl;
-    cin >> N;
-    N_Queen(0);
+    cin >> n;
+    arr = new bool[n];
+    d1 = new bool[2*n-1];
+    d2 = new bool[2*n-1];
+    
+    Solution(0);
     cout << result << endl;
-    return 0;
+
 }
