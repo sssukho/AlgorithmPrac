@@ -1,153 +1,69 @@
 #include <iostream>
 #include <queue>
-#include <vector>
-#include <algorithm>
 using namespace std;
 
-int east[2] = {0, 1}; //y,x
-int west[2] = {0, -1};
-int south[2] = {1, 0};
-int north[2] = {-1, 0};
+#define MAX 1000
 
-int A, B; //가로 세로
-int N, M; //로봇 개수, 명령 개수
+int dy[4] = {1, -1, 0, 0};
+int dx[4] = {0, 0, 1, -1};
 
-int map[102][102];
-vector<pair<pair<int, int>, char>> robot_position; //로봇들의 초기 위치(y,x), 상태
-queue<pair<int, pair<char,int>>> order;//로봇 번호, 명령 종류, 해당 명령 반복 횟수
-pair<int, int> direction;
+int N, M;
+int graph[MAX][MAX];
+int cache[MAX][MAX][2]; //마지막 2는 벽 뚫기 여부
 
-void setDirection(int robotNum, char dir, char left_right) {
-    if(left_right == 'l') {
-        if(dir == 'E') {
-            robot_position[robotNum].second = 'N';
-        }
-        else if(dir == 'W') {
-            robot_position[robotNum].second = 'S';
-        }
-        else if(dir == 'S') {
-            robot_position[robotNum].second = 'E';
-        }
-        else if(dir == 'N') {
-            robot_position[robotNum].second = 'W';
-        }
-    }
-    
-    else {
-        if(dir == 'E') {
-            robot_position[robotNum].second = 'S';
-        }
-        else if(dir == 'W') {
-            robot_position[robotNum].second = 'N';
-        }
-        else if(dir == 'S') {
-            robot_position[robotNum].second = 'W';
-        }
-        else if(dir == 'N') {
-            robot_position[robotNum].second = 'E';
-        }
-    }
-    
-}
+void bfs() {
+    queue<pair<pair<int,int>, bool>> q; // (y,x), 벽뚫기
+    q.push(make_pair(make_pair(0, 0), 1));
+    cache[0][0][1] = 1;
 
-pair<int, int> moveDirection(int y, int x, char dir) {
-    int my = 0, mx = 0;
-    if(dir == 'E') {
-        my = y + east[0];
-        mx = x + east[1];
-    }
-    else if(dir == 'W') {
-        my = y + west[0];
-        mx = x + west[1];
-    }
-    else if(dir == 'S') {
-        my = y + south[0];
-        mx = x + south[1];
-    }
-    else if(dir == 'N') {
-        my = y + north[0];
-        mx = x + north[1];
-    }
-    return make_pair(my, mx);
-}
+    while(!q.empty()) {
+        int y = q.front().first.first;
+        int x = q.front().first.second;
+        bool block = q.front().second;
+        q.pop();
 
-void simulation() {
-    while(!order.empty()) {
-        int robotNum = order.front().first;
-        char ord = order.front().second.first;
-        int repeatNum = order.front().second.second;
-        order.pop();
-        
-        for(int i = 0; i < repeatNum; i++) {
-            int y = robot_position[robotNum-1].first.first;
-            int x = robot_position[robotNum-1].first.second;
-            int my = 0;
-            int mx = 0;
-            
-            if(ord == 'F') {
-                cout << "----------------" << endl;
-                for(int i = 0; i < B; i++) {
-                    for(int j = 0; j < A; j++) {
-                        cout << map[i][j];
-                    }
-                    cout << endl;
+        //도착하면
+        if(y == N-1 && x == M-1) {
+            cout << cache[y][x][block] << endl;
+            return;
+        }
+
+        for(int i = 0; i< 4; i++) {
+            int my = y + dy[i];
+            int mx = x + dx[i];
+
+            if(0 <= my && my < N && 0 <= mx && mx < M) {
+                //벽이 있고, 벽을 아직 안 뚫었다면ㄴ
+                if(graph[my][mx] == 1 && block) {
+                    cache[my][mx][0] = cache[y][x][1]+1;
+                    q.push(make_pair(make_pair(my, mx), 0));
                 }
-                direction = moveDirection(y, x, robot_position[robotNum-1].second);
-                my = direction.first;
-                mx = direction.second;
-                
-                if(my < 0 || my >= B || mx < 0 || mx >= A) {
-                    cout << "Robot " << robotNum << " crashes into the wall\n";
-                    return;
-                }
-                
-                else if(map[my][mx] != 0) {
-                    cout << "Robot " << robotNum << " crashes into robot " << map[my][mx] << "\n";
-                    return;
-                }
-                
-                else if(my >= 0 && my < B && mx >= 0 && mx < A) {
-                    map[y][x] = 0;
-                    robot_position[robotNum-1].first.first = my;
-                    robot_position[robotNum-1].first.second = mx;
-                    map[my][mx] = robotNum;
+                //벽이 없고 방문하지 않았던 곳이라면
+                else if(graph[my][mx] == 0 && cache[my][mx][block] == 0) {
+                    cache[my][mx][block] = cache[y][x][block] + 1;
+                    q.push(make_pair(make_pair(my, mx), block));
                 }
             }
-            else if(ord == 'L') {
-                setDirection(robotNum-1, robot_position[robotNum-1].second, 'l');
-            }
-            else if(ord == 'R') {
-                setDirection(robotNum-1, robot_position[robotNum-1].second, 'r');
-            }
         }
     }
-    cout << "OK" << endl;
+
+    cout << "-1\n";
 }
 
 int main() {
     cout << "start" << endl;
     cin.tie(NULL);
     ios::sync_with_stdio("False");
-    
-    cin >> A >> B;
+
     cin >> N >> M;
 
-    for(int i = 1; i <= N; i++) {
-        int x, y;
-        char s;
-        cin >> x >> y >> s;
-        robot_position.push_back(make_pair(make_pair(B-y, x-1), s));
-        map[B-y][x-1] = i; //로봇의 초기 위치 지정.
+    for(int i = 0; i < N; i++) {
+        for(int j = 0; j < M; j++) {
+            scanf("%1d", &graph[i][j]);
+        }
     }
 
-    for(int i = 0; i < M; i++) {
-        int r, n;
-        char k;
-        cin >> r >> k >> n;
-        order.push(make_pair(r, make_pair(k, n)));
-    }
-    
-    simulation();
-    
+    bfs();
+
     return 0;
 }
