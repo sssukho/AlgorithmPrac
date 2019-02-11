@@ -1,74 +1,88 @@
 #include <iostream>
-#include <queue>
+#include <string>
 using namespace std;
-#define MAX 50
 
-struct Minsik {
+struct pos {
     int y;
     int x;
-    int key;
 };
 
-int N, M; //세로 가로
+pos king;
+pos stone;
 
-bool visited[MAX][MAX][64];
-char map[MAX][MAX];
+string order;
+string kingStart;
+string stoneStart;
+int N;
 
-int dy[4] = { 1, -1, 0, 0 };
-int dx[4] = { 0, 0, 1, -1 };
-queue<Minsik> q;
+int dy[8] = {1, -1, 0, 0, 1, -1, 1, -1};
+int dx[8] = {0 , 0, 1, -1, 1, 1, -1, -1};
 
-int destY, destX;
-int cnt = 0;
+bool check(int y, int x) {
+    if(y >= 0 && y < 8 && x >= 0 && x < 8)
+        return true;
+    return false;
+}
 
-bool isFinished = false;
-
-void bfs() {
-    while(!q.empty()) {
-        int qSize = (int)q.size();
-        
-        for(int i = 0; i < qSize; i++) {
-            int y = q.front().y;
-            int x = q.front().x;
-            int key = q.front().key;
-            q.pop();
-            
-            if(y == destY && x == destX) {
-                isFinished = true;
-                return;
+void move(int dir) {
+    int kingY = king.y;
+    int kingX = king.x;
+    int stoneY = stone.y;
+    int stoneX = stone.x;
+    
+    int my = kingY + dy[dir];
+    int mx = kingX + dx[dir];
+    
+    if(check(my, mx)) {
+        //왕이 가는 경로에 돌이 있는 경우
+        if(my == stoneY && mx == stoneX) {
+            //돌의 경로도 체크
+            if(check(stoneY + dy[dir], stoneX + dx[dir])) {
+                stone.y = stoneY + dy[dir];
+                stone.x = stoneX + dx[dir];
+                king.y = my;
+                king.x = mx;
             }
-            
-            for(int j = 0; j < 4; j++) {
-                int my = y + dy[j];
-                int mx = x + dx[j];
-                
-                if(my >= 0 && my < N && mx >= 0 && mx < M) {
-                    if(!visited[my][mx][key]) {
-                        //빈곳, 출구일때
-                        if(map[my][mx] == '.' || map[my][mx] == '1' || map[my][mx] == '0') {
-                            visited[my][mx][key] = true;
-                            q.push({my, mx, key});
-                        }
-                        //열쇠일때
-                        else if(map[my][mx] >= 'a'-0 && map[my][mx] <= 'f'-0) {
-                            visited[my][mx][key] = true;
-                            int kk = (1 << (map[my][mx]-'a')) | key;
-                            visited[my][mx][kk] = true;
-                            q.push({my, mx, kk});
-                        }
-                        //문일때
-                        else if(map[my][mx] >= 'A'-0 && map[my][mx] <= 'F'-0) {
-                            int isHaveKey = (1 << (map[my][mx]-'A')) & key;
-                            if(isHaveKey > 0) {
-                                visited[my][mx][key] = true;
-                                q.push({my, mx, key});
-                            }
-                        }
-                    }
-                }
-            }
+            return;
         }
-        cnt++;
+        
+        //왕이 가는 경로에 돌이 없는 경우
+        king.y = my;
+        king.x = mx;
+    }
+}
+
+void simulation(string input) {
+    if(input == "R") {
+        move(2);
+    }
+    
+    else if(input == "L") {
+        move(3);
+    }
+    
+    else if(input == "B") {
+        move(1);
+    }
+    
+    else if(input == "T") {
+        move(0);
+    }
+    
+    else if(input == "RT") {
+        move(4);
+    }
+    
+    else if(input == "LT") {
+        move(6);
+    }
+    
+    else if(input == "RB") {
+        move(5);
+    }
+    
+    else if(input == "LB") {
+        move(7);
     }
 }
 
@@ -77,27 +91,26 @@ int main() {
     cin.tie(0);
     ios::sync_with_stdio(0);
     
-    cin >> N >> M;
+    cin >> kingStart;
+    cin >> stoneStart;
+    cin >> N;
+    
+    //(y,x)
+    king = {kingStart[1]-'0'-1, kingStart[0]-'A'};
+    stone = {stoneStart[1]-'0'-1, stoneStart[0]-'A'};
     
     for(int i = 0; i < N; i++) {
-        for(int j = 0; j < M; j++) {
-            cin >> map[i][j];
-            if(map[i][j] == '1') {
-                destY = i;
-                destX = j;
-            }
-            if(map[i][j] == '0') {
-                q.push({i, j, 0});
-                visited[i][j][0] = true;
-            }
-        }
+        cin >> order;
+        simulation(order);
     }
     
-    bfs();
+    char kingX = king.x+'A';
+    char stoneX = stone.x+'A';
+    int kingY = king.y+1;
+    int stoneY = stone.y+1;
     
-    if(isFinished)
-        cout << cnt << endl;
-    else
-        cout << -1 << endl;
+    cout << kingX << kingY << endl;
+    cout << stoneX << stoneY << endl;
+    
     return 0;
 }
