@@ -1,32 +1,33 @@
 #include <iostream>
-
+#include <cstring>
 using namespace std;
 
-#define MAX 101
+#define MAX 51
 
-int N;
-int numbers[MAX];
-//long long cache[N][M] N번까지의 수의 식을 세웠을 때 나오는 값 M에 대한 경우의 수
-long long cache[MAX][21];
+int map[MAX][MAX];
+bool visited[MAX][MAX];
 
-long long solve(int depth, int sum) {
-    if(sum < 0 || sum > 20)
-        return 0;
+int W, H; //너비, 높이 (가로 세로)
+
+int dy[8] = {1, -1, 0, 0, 1, 1, -1, -1};
+int dx[8] = {0, 0, 1, -1, 1, -1, 1, -1};
+
+int cnt = 0;
+
+void dfs(int y, int x) {
+    visited[y][x] = true;
     
-    if(depth == N-2) {
-        if(sum == numbers[N-1])
-            return 1;
-        else
-            return 0;
+    for(int i = 0; i < 8; i++) {
+        int my = y + dy[i];
+        int mx = x + dx[i];
+        
+        if(my >= 0 && my < H && mx >= 0 && mx < W) {
+            if(!visited[my][mx] && map[my][mx] == 1) {
+                visited[my][mx] = true;
+                dfs(my,mx);
+            }
+        }
     }
-    
-    if(cache[depth+1][sum] > 0)
-        return cache[depth+1][sum];
-    
-    cache[depth+1][sum] = cache[depth][sum] + solve(depth+1, sum+numbers[depth+1]);
-    cache[depth+1][sum] = cache[depth][sum] + solve(depth+1, sum-numbers[depth+1]);
-    
-    return cache[depth+1][sum];
 }
 
 int main() {
@@ -34,11 +35,33 @@ int main() {
     cin.tie(0);
     ios::sync_with_stdio(0);
     
-    cin >> N;
-    for(int i = 0; i < N; i++)
-        cin >> numbers[i];
-    
-    cout << solve(0, numbers[0]) << endl;
+    while(true) {
+        cnt = 0;
+        memset(visited, false, sizeof(visited));
+        memset(map, 0, sizeof(map));
+        
+        cin >> W >> H;
+        if(W == 0 && H == 0)
+            break;
+        
+        //1은 땅, 0은 바다
+        for(int i = 0; i < H; i++) {
+            for(int j = 0; j < W; j++) {
+                cin >> map[i][j];
+            }
+        }
+        
+        for(int i = 0; i < H; i++) {
+            for(int j = 0; j < W; j++) {
+                if(!visited[i][j] && map[i][j] == 1) {
+                    dfs(i,j);
+                    cnt++;
+                }
+            }
+        }
+        
+        cout << cnt << endl;
+    }
     
     return 0;
 }
