@@ -1,34 +1,29 @@
 #include <iostream>
-#include <algorithm>
+#include <utility>
 #include <vector>
-#include <cstring>
 using namespace std;
 #define MAX 101
 
-int map[MAX][MAX];
-bool visited[MAX][MAX];
+int N, K, L;
+int map[MAX][MAX]; //사과는 2, 뱀은 1, 맵은 0
+vector<pair<int, int>> order;
 
-int N;
+int dy[4] = {0, 0, -1, 1};
+int dx[4] = {-1, 1, 0, 0};
 
-int dy[4] = { 1, -1, 0, 0 };
-int dx[4] = { 0, 0, 1, -1 };
-
-int min_height = 100;
-int max_height = 0;
-
-void dfs(int y, int x) {
-    visited[y][x] = true;
+int turn(int now, int next) {
+    if(next == 0) {
+        if(now == 0 || now == 1)
+            return (now+2) % 4;
+        else
+            return 3-now;
+    }
     
-    for(int i = 0; i < 4; i++) {
-        int my = y + dy[i];
-        int mx = x + dx[i];
-        
-        if(my >= 0 && my < N && mx >= 0 && mx < N) {
-            if(!visited[my][mx] && map[my][mx] > min_height) {
-                visited[my][mx] = true;
-                dfs(my, mx);
-            }
-        }
+    else {
+        if(now == 0 || now == 1)
+            return 3- now;
+        else
+            return (now+2) % 4;
     }
 }
 
@@ -37,36 +32,75 @@ int main() {
     cin.tie(0);
     ios::sync_with_stdio(0);
     
-    cin >> N;
-    for(int i = 0; i < N; i++) {
-        for(int j = 0; j < N; j++) {
-            cin >> map[i][j];
-            if(map[i][j] < min_height)
-                min_height = map[i][j];
-            if(map[i][j] > max_height)
-                max_height = map[i][j];
-        }
-    }
-    int ans = 1;
-    while(min_height < max_height) {
-        int cnt = 0;
-        memset(visited, false, sizeof(visited));
-        
-        for(int i = 0 ; i < N; i++) {
-            for(int j = 0; j < N; j++) {
-                if(min_height < map[i][j] && !visited[i][j]) {
-                    dfs(i, j);
-                    cnt++;
-                }
-            }
-        }
-        
-        ans = max(ans,cnt);
-        min_height++;
+    cin >> N >> K;
+    
+    for(int i = 0; i < K; i++) {
+        int kx, ky;
+        cin >> kx >> ky;
+        map[kx-1][ky-1] = 2;
     }
     
+    cin >> L;
     
-    cout << ans << endl;
+    for(int i = 0; i < L; i++) {
+        int X;
+        char C;
+        
+        cin >> X >> C;
+        
+        int d;
+        if(C == 'L') // 왼쪽 0
+            d = 0;
+        else // 오른쪽1
+            d = 1;
+        
+        order.push_back(make_pair(X, d));
+    }
+    
+    vector<pair<int, int>> snake;
+    
+    int x = 0, y = 0; //머리 위치
+    int d = 3;
+    int sec = 0;
+    
+    int vi = 0; //시간 벡터 인덱스
+    bool v_flag = false;
+    
+    map[x][y] = 1;
+    snake.push_back(make_pair(x, y));
+    
+    while(true) {
+        if(!v_flag && sec == order[vi].first) {
+            d = turn(d, order[vi++].second);
+            if(vi == order.size())
+                v_flag = true;
+        }
+        
+        int mx = x + dx[d];
+        int my = y + dy[d];
+        
+        if(mx < 0 || my < 0 || mx >= N || my >= N)
+            break;
+        
+        if(map[mx][my] == 1) {
+            break;
+        }
+        
+        else if(map[mx][my] == 0) {
+            map[snake[0].first][snake[0].second] = 0;
+            snake.erase(snake.begin());
+        }
+        
+        x = mx;
+        y = my;
+        
+        map[x][y] = 1;
+        snake.push_back(make_pair(x, y));
+        
+        sec++;
+    }
+    
+    cout << sec + 1;
     
     return 0;
 }
