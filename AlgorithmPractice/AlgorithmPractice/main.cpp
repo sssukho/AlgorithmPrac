@@ -1,106 +1,74 @@
 #include <iostream>
-#include <utility>
-#include <vector>
+#include <algorithm>
 using namespace std;
-#define MAX 101
+#define MAX 55
 
-int N, K, L;
-int map[MAX][MAX]; //사과는 2, 뱀은 1, 맵은 0
-vector<pair<int, int>> order;
+int N, maxEat;
+char map[MAX][MAX];
+//우측 아래로만 보면 되기 때문
+int dy[2] = {1, 0};
+int dx[2] = {0, 1};
 
-int dy[4] = {0, 0, -1, 1};
-int dx[4] = {-1, 1, 0, 0};
-
-int turn(int now, int next) {
-    if(next == 0) {
-        if(now == 0 || now == 1)
-            return (now+2) % 4;
-        else
-            return 3-now;
+int check() {
+    int ret = 1;
+    int cnt = 1;
+    
+    for(int i = 0; i < N; i++) {
+        //가로
+        for(int j = 0; j < N-1; j++) {
+            if(map[i][j] == map[i][j+1])
+                cnt++;
+            else {
+                ret = max(ret,cnt);
+                cnt = 1;
+            }
+        }
+        
+        ret = max(ret, cnt);
+        cnt = 1;
+        //세로
+        for(int j = 0; j < N-1; j++) {
+            if(map[j][i] == map[j+1][i])
+                cnt++;
+            else {
+                ret = max(ret, cnt);
+                cnt = 1;
+            }
+        }
+        ret = max(ret, cnt);
+        cnt = 1;
     }
     
-    else {
-        if(now == 0 || now == 1)
-            return 3- now;
-        else
-            return (now+2) % 4;
-    }
+    return ret;
 }
 
 int main() {
-    cout << "start" << endl;
     cin.tie(0);
     ios::sync_with_stdio(0);
     
-    cin >> N >> K;
+    cin >> N;
     
-    for(int i = 0; i < K; i++) {
-        int kx, ky;
-        cin >> kx >> ky;
-        map[kx-1][ky-1] = 2;
+    for(int i = 0; i < N; i++) {
+        for(int j = 0; j < N; j++) {
+            cin >> map[i][j];
+        }
     }
     
-    cin >> L;
-    
-    for(int i = 0; i < L; i++) {
-        int X;
-        char C;
-        
-        cin >> X >> C;
-        
-        int d;
-        if(C == 'L') // 왼쪽 0
-            d = 0;
-        else // 오른쪽1
-            d = 1;
-        
-        order.push_back(make_pair(X, d));
+    for(int y = 0; y < N; y++) {
+        for(int x = 0; x < N; x++) {
+            for(int i = 0; i < 2; i++) {
+                int my = y + dy[i];
+                int mx = x + dx[i];
+                
+                if(!map[my][mx]) continue;
+                swap(map[y][x], map[my][mx]);
+                maxEat = max(maxEat, check());
+                swap(map[y][x], map[my][mx]);
+            }
+        }
     }
     
-    vector<pair<int, int>> snake;
-    
-    int x = 0, y = 0; //머리 위치
-    int d = 3;
-    int sec = 0;
-    
-    int vi = 0; //시간 벡터 인덱스
-    bool v_flag = false;
-    
-    map[x][y] = 1;
-    snake.push_back(make_pair(x, y));
-    
-    while(true) {
-        if(!v_flag && sec == order[vi].first) {
-            d = turn(d, order[vi++].second);
-            if(vi == order.size())
-                v_flag = true;
-        }
-        
-        int mx = x + dx[d];
-        int my = y + dy[d];
-        
-        if(mx < 0 || my < 0 || mx >= N || my >= N)
-            break;
-        
-        if(map[mx][my] == 1) {
-            break;
-        }
-        
-        else if(map[mx][my] == 0) {
-            map[snake[0].first][snake[0].second] = 0;
-            snake.erase(snake.begin());
-        }
-        
-        x = mx;
-        y = my;
-        
-        map[x][y] = 1;
-        snake.push_back(make_pair(x, y));
-        
-        sec++;
-    }
-    
-    cout << sec + 1;
+    cout << maxEat << endl;
     
     return 0;
 }
