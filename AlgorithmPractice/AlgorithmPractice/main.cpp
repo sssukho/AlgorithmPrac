@@ -1,123 +1,67 @@
 #include <iostream>
 #include <string>
-#include <queue>
-#include <cstring>
-#include <utility>
+#include <vector>
 using namespace std;
-#define MAX 102
 
-int T;
-int H, W;
-string map[MAX];
-bool visited[MAX][MAX];
-bool key[26];
-int ans;
-int dy[4] = {1, -1, 0, 0};
-int dx[4] = {0, 0, 1, -1};
-
-void simulation(int y, int x) {
-    queue<pair<int, int>> q;
-    q.push(make_pair(y, x));
-    
-    while(!q.empty()) {
-        int curY = q.front().first;
-        int curX = q.front().second;
-        q.pop();
-        
-        //범위 벗어남
-        if(curY < 0 || curY > H+1 || curX < 0 || curX > W+1)
-            continue;
-        
-        //이미 방문한 지점이거나, 벽이거나, 잠긴 문일 경우
-        if(visited[curY][curX] || map[curY][curX] == '*' || ('A' <= map[curY][curX] && map[curY][curX] <= 'Z'))
-            continue;
-        
-        visited[curY][curX] = true; //방문 표시
-        
-        //문서
-        if(map[curY][curX] == '$') {
-            ans++;
-            map[curY][curX] = '.';
+//N에서 자기 자신을 찾으면서 나타나는 부분 일치를 이용해 pi[]를 계산한다.
+//pi[i] = N[..i]의 접미사도 되고 접두사도 되는 문자열의 최대 길이
+vector<int> getPartialMatch(const string& N) {
+    int m = (int)N.size();
+    vector<int> pi(m, 0);
+    //KMP로 자기 자신을 찾는다.
+    //N을 N에서 찾는다. begin = 0이면 자기 자신을 찾아버리니까 안됨!
+    int begin = 1, matched = 0;
+    //비교할 문자가 N의 끝에 도달할 때까지 찾으면서 부분 일치를 모두 기록한다.
+    while(begin + matched < m) {
+        if(N[begin + matched] == N[matched]) {
+            ++matched;
+            pi[begin + matched-1] = matched;
         }
-        
-        //열쇠 찾았을 경우
-        if('a' <= map[curY][curX] && map[curY][curX] <= 'z') {
-            char door = (char)toupper(map[curY][curX]);
-            map[curY][curX] = '.';
-            
-            //이미 있던 열쇠에 대해선는 처리하지 않늗나.
-            if(key[(int)door - 65] == false) {
-                key[(int)door-65] = true;
-                //잠긴 문을 연다.
-                for(int y = 1; y <= H; y++)
-                    for(int x = 1; x <= W; x++)
-                        if(map[y][x] == door)
-                            map[y][x] = '.';
-                //잠긴 문이 열렸으므로 모든 경로를 다시 확인
-                memset(visited, false, sizeof(visited));
-                while(!q.empty())
-                    q.pop();
-                q.push(make_pair(curY, curX));
-                continue;
+        else {
+            if(matched == 0)
+                ++begin;
+            else {
+                begin = begin + (matched - pi[matched-1]);
+                matched = pi[matched-1];
             }
         }
-        for(int i = 0; i < 4; i++) {
-            int nextY = curY + dy[i];
-            int nextX = curX + dx[i];
-            q.push(make_pair(nextY, nextX));
-        }
     }
+    return pi;
 }
 
-int main() {
-    cout << "start" << endl;
-    cin.tie(0);
-    ios::sync_with_stdio(0);
+vector<int> kmpSearch(const string& H, const string& N) {
+    int n = (int)H.size(), m = (int)N.size();
+    vector<int> ret;
+    //pi[i] = N[..i]의 접미사도 되고 접두사도 되는 문자열의 최대 길이
+    vector<int> pi = getPartialMatch(N);
+    //begin = matched = 0 에서부터 시작하자.
+    int begin = 0, matched = 0;
     
-    cin >> T;
-    
-    for(int t = 0; t < T; t++) {
-        memset(visited, false, sizeof(visited));
-        memset(map, 0, sizeof(map));
-        memset(key, false, sizeof(key));
-        
-        cin >> H >> W;
-        
-        //테두리를 빈칸으로
-        for(int i = 0; i < W + 2; i++) {
-            map[0] += '.';
+    while(begin <= n - m) {
+        //만약 H의 해당글자가 N의 해당 글자와 같다면
+        if(matched < m && H[begin+matched] == N[matched]) {
+            ++matched;
+            //결과적으로 m글자가 모두 일치했다면 답에 추가한다.
+            if(matched == m) ret.push_back(begin);
         }
-        
-        for(int i = 1; i <= H; i++) {
-            string temp;
-            cin >> temp;
-            map[i] += '.';
-            map[i] += temp;
-            map[i] += '.';
-        }
-        
-        for(int i = 0; i < W + 2; i++) {
-            map[H+1] += '.';
-        }
-        
-        string inputKey;
-        cin >> inputKey;
-        
-        for(int i = 0; inputKey[i] != '0' && i < inputKey.length(); i++) {
-            key[(int)inputKey[i]-97] = true; //열쇠 설정
-            //문을 열어둔다.
-            for(int y = 1; y <= H; y++) {
-                for(int x = 1; x <= W; x++) {
-                    if(map[y][x] == (char)toupper(inputKey[i]))
-                        map[y][x] = '.';
-                }
+        else {
+            //예외 : matched가 0인 경우에서는 다음 칸에서부터 계속
+            if(matched == 0)
+                ++begin;
+            else {
+                begin = begin + (matched - pi[matched-1]);
+                //begin을 옮겼다고 처음부터 다시 비교할 필요가 없다.
+                //옮긴 후에도 pi[matched-1]만큼은 항상 일치하기 때문이다.
+                matched = pi[matched-1];
             }
         }
-        
-        ans = 0;
-        simulation(0, 0);
-        cout << ans << endl;
     }
+    
+    return ret;
+}
+
+
+int main() {
     
     return 0;
 }
