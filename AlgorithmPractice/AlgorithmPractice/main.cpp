@@ -1,73 +1,45 @@
 #include <iostream>
+#include <vector>
+#include <algorithm>
 using namespace std;
-#define MAX 101
 
-int N, M;
-int map[MAX][MAX];
-int dy[4] = { 1, -1, 0, 0};
-int dx[4] = { 0, 0, 1, -1};
-
-//치즈 개수 파악
-int allMelted() {
-    int cnt = 0;
-    
-    for(int i = 0; i < N; i++) {
-        for(int j = 0; j < M; j++) {
-            if(map[i][j] == 1 || map[i][j] == 2) {
-                //치즈인데 외부 공기에 2면 이상 닿지 않은 치즈들
-                map[i][j] = 1;
-                cnt++;
-            }
-            else map[i][j] = 0;
-        }
-    }
-    
-    return cnt;
-}
-
-//외부 공기로만 계속 들어감
-void dfs(int y, int x) {
-    map[y][x] = -1;
-    
-    for(int i = 0; i < 4; i++) {
-        int my = y + dy[i];
-        int mx = x + dx[i];
-        
-        if(my >= 0 && my < N && mx >= 0 && mx < M) {
-            if(map[my][mx] > 0)
-                map[my][mx]++;
-            else if(map[my][mx] == 0)
-                dfs(my, mx);
-        }
-    }
-}
+long long T[1000001];
 
 int main() {
     cout << "start" << endl;
     cin.tie(0);
     ios::sync_with_stdio(0);
-    
-    int time = 0;
-    
+
+    int N, M; // 입국심사대, 상근이의 친구들
+    long long max = 0;
     cin >> N >> M;
-    
+
     for(int i = 0; i < N; i++) {
-        for(int j = 0; j < M; j++) {
-            cin >> map[i][j];
+        cin >> T[i];
+        if(max < T[i])
+            max = T[i];
+    }
+
+    //가장 오래 걸리는 시간이 가장 시간이 오래걸리는 심사대에서 모든 사람들이 심사를 받는 경우이기 때문.
+    long long left = 1, right = max * M;
+    long long result = max * M;
+
+    while (left <= right) {
+        long long mid = (left + right) / 2;
+        long long total = 0;
+        for(int i = 0; i < N; i++) {
+            total += mid / T[i];
+        }
+
+        if(total < M) {
+            left = mid + 1;
+        }
+        else {
+            if(result > mid)
+                result = mid;
+            right = mid - 1;
         }
     }
-    
-    while(true) {
-        int toMelt = allMelted();
-        if(toMelt == 0)
-            break;
-        
-        for(int i = 0; i < toMelt; i++) {
-            dfs(0, 0);
-        }
-        
-        time++;
-    }
-    cout << time << endl;
+    cout << result << endl;
     return 0;
 }
