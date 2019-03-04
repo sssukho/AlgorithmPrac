@@ -1,112 +1,106 @@
-////균형 잡힌 이진 검색 트리 '트립' 구현/////
 #include <iostream>
+#include <cstring>
+#include <vector>
 #include <utility>
+#include <memory.h>
+#include <algorithm>
 using namespace std;
+#define MAX 9
 
-/************* 트립의 노드를 표현하는 객체의 구현 ****************/
+int N, M; //세로 가로
+int map[MAX][MAX];
+int copyMap[MAX][MAX];
+vector<pair<int, int>> virus; //y, x
+vector<pair<int, int>> empty; //y, x
+int emptySize = 0;
+int emptyCnt;
+int ans = 0;
 
-typedef int KeyType;
-//트립의 한 노드를 저장한다.
-struct Node {
-    //노드에 저장된 원소
-    KeyType key;
-    //이 노드의 우선순위(priority)
-    //이 노드를 루트로 하는 서브트리의 크기(size)
-    int priority, size;
-    //두 자식 노드의 포인터
-    Node *left, *right;
-    //생성자에서 난수 우선순위를 생성하고, size와 left/right를 초기화한다.
-    Node(const KeyType& _key) : key(_key), priority(rand()),
-        size(1), left(NULL), right(NULL) {
+vector<int> comb;
+
+int dy[4] = {1, -1, 0, 0};
+int dx[4] = {0, 0, 1, -1};
+
+//바이러스 퍼지게 하는 dfs
+void dfs(int y, int x) {
+    copyMap[y][x] = 2;
+    
+    for(int i = 0; i < 4; i++) {
+        int my = y + dy[i];
+        int mx = x + dx[i];
         
+        if(my >= 0 && my < N && mx >= 0 && mx < M) {
+            if(copyMap[my][mx] == 0) {
+                dfs(my, mx);
+            }
+        }
+    }
+}
+
+int main() {
+    cout << "start" << endl;
+    cin.tie(0);
+    ios::sync_with_stdio(0);
+    
+    cin >> N >> M;
+    
+    //0은 빈칸, 1은 벽, 2는 바이러스
+    for(int i = 0; i < N; i++) {
+        for(int j = 0; j < M; j++) {
+            cin >> map[i][j];
+            if(map[i][j] == 2)
+                virus.push_back(make_pair(i, j));
+            
+            if(map[i][j] == 0) {
+                emptySize++;
+                empty.push_back(make_pair(i, j));
+            }
+            
+        }
     }
     
-    void setLeft(Node* newLeft) {
-        left = newLeft;
-        calcSize();
-    }
+    for(int i = 0; i < 3; i++)
+        comb.push_back(1);
     
-    void setRight(Node* newRight) {
-        right = newRight;
-        calcSize();
-    }
-    //size 멤버를 갱신한다.
-    void calcSize() {
-        size = 1;
-        if(left)
-            size = size + left->size;
-        if(right)
-            size = size + right->size;
-    }
-};
-
-/************* 트립에서의 노드 추가와 트립 쪼개기 구현 ****************/
-
-typedef pair<Node*, Node*> NodePair;
-//root를 루트로 하는 트립을 key 미만의 값과 이상의 값을 갖는 두개의 트립으로 분리
-NodePair split(Node* root, KeyType key) {
-    if(root == NULL)
-        return NodePair(NULL, NULL);
-    //루트가 key 미만이면 오른쪽 서브트리를 쪼갠다.
-    if(root->key < key) {
-        NodePair rs = split(root->right, key);
-        root->setRight(rs.first);
-        return NodePair(root, rs.second);
-    }
-    //루트가 key 이상이면 왼쪽 서브트리를 쪼갠다.
-    NodePair ls = split(root->left, key);
-    root->setLeft(ls.second);
-    return NodePair(ls.first, root);
-}
-
-//root를 루트로 하는 트립에 새 노드 node를 삽입한 뒤 결과 트립의 루트를 반환한다.
-Node* insert(Node* root, Node* node) {
-    if(root == NULL)
-        return node;
-    //node가 루트를 대체해야 한다. 해당 서브트리를 반으로 잘라 각각 자손으로 한다.
-    if(root->priority < node->priority) {
-        NodePair splitted = split(root, node->key);
-        node->setLeft(splitted.first);
-        node->setRight(splitted.second);
-        return node;
-    }
-    else if(node->key < root->key)
-        root->setLeft(insert(root->left, node));
-    else
-        root->setRight(insert(root->right, node));
+    for(int i = 0; i < emptySize-3; i++)
+        comb.push_back(0);
     
-    return root;
+    sort(comb.begin(), comb.end());
+    
+    do {
+        emptyCnt = 0;
+        memcpy(copyMap, map, sizeof(map));
+        
+        //벽 세워보기
+        for(int i = 0 ; i < emptySize; i++) {
+            if(comb[i] == 1) {
+                int y = empty[i].first;
+                int x = empty[i].second;
+                copyMap[y][x] = 1;
+            }
+        }
+        
+        //바이러스 퍼지게
+        for(int i = 0; i < (int)virus.size(); i++) {
+            int y = virus[i].first;
+            int x = virus[i].second;
+            
+            dfs(y, x);
+        }
+        
+        for(int i = 0; i < N; i++)
+            for(int j = 0; j < M; j++)
+                if(copyMap[i][j] == 0)
+                    emptyCnt++;
+        
+        ans = max(ans, emptyCnt);
+        
+    }while(next_permutation(comb.begin(), comb.end()));
+    
+    cout << ans << endl;
+    
+    return 0;
 }
 
-/************* 트립에서 노드의 삭제와 합치기 연산의 구현 ****************/
-
-//a와 b가 두 개의 트립이고, max(a) < min(b)일 때 이 둘을 합친다.
-Node* merge(Node* a, Node* b) {
-    if(a == NULL)
-        return b;
-    if(b == NULL)
-        return a;
-    if(a->priority < b->priority) {
-        b->setLeft(merge(a, b->left));
-        return b;
-    }
-    a->setRight(merge(a->right, b));
-    return a;
-}
-
-//root를 루트로 하는 트립에서 key를 지우고 그 결과 트립의 루트를 반환한다.
-Node* erase(Node* root, KeyType key) {
-    if(root == NULL)
-        return root;
-    //root를 지우고 양 서브트리를 합친 뒤 반환한다.
-    if(root->key == key) {
-        Node* ret = merge(root->left, root->right);
-        delete root;
-        return ret;
-    }
-    if(key < root->key)
-        root->setLeft(erase(root->left, key));
-    else
-        root->setRight(erase(root->right, key));
-    return root;
-}
+//벽을 다 세워봐야함
+//0인 벽의 카운ㄴㅌ
