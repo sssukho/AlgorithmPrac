@@ -1,54 +1,14 @@
 #include <iostream>
 #include <vector>
-#include <cstring>
+#include <math.h>
 #include <algorithm>
 using namespace std;
-#define MAX 1000001
+#define MAX 21
 
 int N;
-vector<int> friends[MAX]; // 처음 입력하는 친구 관계
-vector<int> dirNode[MAX]; // 단방향 그래프 저장
-bool visited[MAX];
-int cache[MAX][2]; //노드, earlyAdopter?
-
-void dfs(int node) {
-    visited[node] = true;
-    
-    for(int i = 0; i < (int)friends[node].size(); i++) {
-        int next = friends[node][i];
-        
-        if(!visited[next]) {
-            dirNode[node].push_back(next);
-            dfs(next);
-        }
-    }
-}
-
-int getEarlyAdopter(int node, bool isEarlyAdopter) {
-    int &result = cache[node][isEarlyAdopter];
-    if(result != -1)
-        return result;
-    
-    //본인이 얼리어댑터이면 자식은 어떻든 상관 없다.
-    if(isEarlyAdopter) {
-        result = 1; //얼리 어댑터이므로
-        for(int i = 0; i < (int)dirNode[node].size(); i++) {
-            int next = dirNode[node][i];
-            result += min(getEarlyAdopter(next, true), getEarlyAdopter(next, false));
-        }
-    }
-    
-    //본인이 얼리어댑터가 아니면 자식은 무조건 얼리어댑터여야 한다.
-    else {
-        result = 0; //얼리어댑터가 아니므로
-        for(int i = 0; i < (int)dirNode[node].size(); i++) {
-            int next = dirNode[node][i];
-            result += getEarlyAdopter(next, true);
-        }
-    }
-    
-    return result;
-}
+int s[MAX][MAX];
+vector<int> comb;
+vector<int> cost;
 
 int main() {
     cout << "start" << endl;
@@ -57,23 +17,50 @@ int main() {
     
     cin >> N;
     
-    for(int i = 0; i < N - 1; i++) {
-        int node1, node2;
-        cin >> node1 >> node2;
-        
-        friends[node1].push_back(node2);
-        friends[node2].push_back(node1);
+    for(int i = 0; i < N; i++) {
+        for(int j = 0; j < N; j++) {
+            cin >> s[i][j];
+        }
     }
+    // N/2가 한 팀의 명수
+    for(int i = 0; i < N/2; i++)
+        comb.push_back(1);
     
-    memset(cache, -1, sizeof(cache));
+    for(int i = 0; i < N/2; i++)
+        comb.push_back(0);
     
-    dfs(1); //1이 루트
+    do {
+        int team1 = 0;
+        int team2 = 0;
+        vector<int> start;
+        vector<int> link;
+        
+        for(int i = 0; i < N; i++) {
+            if(comb[i] == 1)
+                start.push_back(i);
+            
+            else if(comb[i] == 0)
+                link.push_back(i);
+        }
+        
+        for(int i = 0; i < start.size(); i++) {
+            for(int j = i+1; j < start.size(); j++) {
+                team1 = team1 + s[start[i]][start[j]] + s[start[j]][start[i]];
+            }
+        }
+        
+        for(int i = 0; i < link.size(); i++) {
+            for(int j = i+1; j < link.size(); j++) {
+                team2 = team2 + s[link[i]][link[j]] + s[link[j]][link[i]];
+            }
+        }
+        
+        cost.push_back(abs(team1-team2));
+    }while(prev_permutation(comb.begin(), comb.end()));
     
-    //루트가 얼리어댑터일 수도 아닐 수도 있으므로
-    cout << min(getEarlyAdopter(1, false), getEarlyAdopter(1, true)) << endl;
+    sort(cost.begin(), cost.end());
+    
+    cout << cost[0] << endl;
     
     return 0;
 }
-
-//자신이 얼리어답터인 경우 -> 자식들은 얼리 어답터가 아니어도 된다.
-//자신이 얼리어답터가 아닌 경우 -> 이웃한 모두가 얼리어답터여야 한다.
