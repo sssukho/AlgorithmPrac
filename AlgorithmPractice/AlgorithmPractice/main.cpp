@@ -1,66 +1,71 @@
 #include <iostream>
 #include <vector>
-#include <math.h>
-#include <algorithm>
 using namespace std;
-#define MAX 21
 
-int N;
-int s[MAX][MAX];
-vector<int> comb;
-vector<int> cost;
+int map[101][101];
+int N, x, y, d, g;
+vector<int> directions;
+
+int getDir(int dir) {
+    if(dir == 0)
+        return 1;
+    else if(dir == 1)
+        return 2;
+    else if(dir == 2)
+        return 3;
+    else
+        return 0;
+}
 
 int main() {
     cout << "start" << endl;
-    cin.tie(0);
-    ios::sync_with_stdio(0);
     
     cin >> N;
     
     for(int i = 0; i < N; i++) {
-        for(int j = 0; j < N; j++) {
-            cin >> s[i][j];
+        cin >> x >> y >> d >> g;
+        //초기화
+        directions.clear();
+        //첫 진행 방향 저장
+        directions.push_back(d);
+        
+        //드래곤 커브 그리기
+        while(g--) {
+            //저장된 방향을 역순으로 꺼냄
+            for(int a = (int)directions.size()-1; a>= 0; a--) {
+                //이전 방향에서 90도 꺾인 값 저장
+                int dir = directions[a];
+                directions.push_back(getDir(dir));
+            }
+        }
+        
+        //입력된 좌표 저장
+        map[y][x] = 1;
+        //나머지 좌표를 그림
+        for(int j = 0; j < (int)directions.size(); j++) {
+            int dir = directions[j];
+            if(dir == 0)
+                x++;
+            else if(dir == 1)
+                y--;
+            else if(dir == 2)
+                x--;
+            else
+                y++;
+            
+            map[y][x] = 1;
         }
     }
-    // N/2가 한 팀의 명수
-    for(int i = 0; i < N/2; i++)
-        comb.push_back(1);
     
-    for(int i = 0; i < N/2; i++)
-        comb.push_back(0);
-    
-    do {
-        int team1 = 0;
-        int team2 = 0;
-        vector<int> start;
-        vector<int> link;
-        
-        for(int i = 0; i < N; i++) {
-            if(comb[i] == 1)
-                start.push_back(i);
-            
-            else if(comb[i] == 0)
-                link.push_back(i);
+    int result = 0;
+    for(int i = 0; i < 100; i++) {
+        for(int j = 0; j < 100; j++) {
+            if(map[i][j] && map[i][j+1] && map[i+1][j] && map[i+1][j+1])
+                result++;
         }
-        
-        for(int i = 0; i < start.size(); i++) {
-            for(int j = i+1; j < start.size(); j++) {
-                team1 = team1 + s[start[i]][start[j]] + s[start[j]][start[i]];
-            }
-        }
-        
-        for(int i = 0; i < link.size(); i++) {
-            for(int j = i+1; j < link.size(); j++) {
-                team2 = team2 + s[link[i]][link[j]] + s[link[j]][link[i]];
-            }
-        }
-        
-        cost.push_back(abs(team1-team2));
-    }while(prev_permutation(comb.begin(), comb.end()));
+    }
     
-    sort(cost.begin(), cost.end());
-    
-    cout << cost[0] << endl;
+    cout << result << endl;
     
     return 0;
 }
