@@ -1,62 +1,51 @@
 #include <iostream>
 #include <vector>
-#include <algorithm>
 using namespace std;
+#define MAX 101
 
-vector<int> s;
-vector<int> comb;
-vector<int> idx;
-vector<int> output;
+int N;
+int cnt;
 
-int t, k;
+int node[MAX];
+bool visited[MAX];
+bool cycle[MAX];
+
+bool DFS(int startNum, int nodeNum) {
+    if(visited[nodeNum])
+        return false;
+    
+    visited[nodeNum] = true;
+    
+    //사이클을 이루면
+    if(startNum == nodeNum || DFS(startNum, node[nodeNum])) {
+        cnt++;
+        cycle[nodeNum] = true;
+        return true;
+    }
+    return false;
+}
 
 int main() {
     cout << "start" << endl;
     cin.tie(0);
     ios::sync_with_stdio(0);
     
-    while(true) {
-        s.clear();
-        comb.clear();
-        idx.clear();
-        
-        cin >> k;
-        if(k == 0)
-            break;
-        
-        for(int i = 0; i < k; i++) {
-            int input;
-            cin >> input;
-            s.push_back(input);
-        }
-        
-        for(int i = 0; i < 6; i++)
-            comb.push_back(1);
-        
-        for(int i = 0; i < (int)s.size() - 6; i++)
-            comb.push_back(0);
-        
-        do {
-            idx.clear();
-            for(int i = 0; i < (int)s.size(); i++) {
-                if(comb[i] == 1) {
-                    idx.push_back(i);
-                }
-            }
-            
-            for(int i = 0; i < (int)idx.size(); i++)
-                output.push_back(s[idx[i]]);
-            
-            sort(output.begin(), output.end());
-            
-            for(int i = 0; i < (int)output.size(); i++) {
-                cout << output[i] << ' ';
-            }
-            output.clear();
-            cout << "\n";
-        }while(prev_permutation(comb.begin(), comb.end()));
-        cout << "\n";
+    cin >> N;
+    
+    for(int i = 1; i <= N; i++)
+        cin >> node[i];
+    
+    for(int i = 1; i <= N; i++) {
+        for(int j = 1; j <= N; j++)
+            visited[j] = cycle[j]; //이미 사이클을 이루는 집합은 재방문X
+        DFS(i, node[i]);
     }
+    
+    cout << cnt << endl;
+    for(int i = 1; i <= N; i++)
+        if(cycle[i]) //사이클 이루는 노드들 출력
+            cout << i << " ";
+    cout << endl;
     
     return 0;
 }
