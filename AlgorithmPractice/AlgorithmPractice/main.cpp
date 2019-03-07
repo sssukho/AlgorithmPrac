@@ -1,71 +1,83 @@
 #include <iostream>
-#include <vector>
 using namespace std;
+#define MAX 51
 
-int map[101][101];
-int N, x, y, d, g;
-vector<int> directions;
+int N, M;
+int map[MAX][MAX];
+int y, x, dir;
+int ans;
+
+int dy[4] = {-1, 0, 1, 0};
+int dx[4] = {0, 1, 0, -1};
+
+int getBackDir(int dir) {
+    if(dir == 0)
+        return 2;
+    else if(dir == 1)
+        return 3;
+    else if(dir == 2)
+        return 0;
+    else
+        return 1;
+}
 
 int getDir(int dir) {
     if(dir == 0)
-        return 1;
-    else if(dir == 1)
-        return 2;
-    else if(dir == 2)
         return 3;
-    else
+    else if(dir == 1)
         return 0;
+    else if(dir == 2)
+        return 1;
+    else
+        return 2;
 }
+
 
 int main() {
     cout << "start" << endl;
+    cin.tie(0);
+    ios::sync_with_stdio(0);
     
-    cin >> N;
+    cin >> N >> M;
+    cin >> y >> x >> dir;
     
-    for(int i = 0; i < N; i++) {
-        cin >> x >> y >> d >> g;
-        //초기화
-        directions.clear();
-        //첫 진행 방향 저장
-        directions.push_back(d);
+    for(int i = 0; i < N; i++)
+        for(int j = 0; j < M; j++)
+            cin >> map[i][j];
+    
+    while(true) {
+        //현재 위치 청소
+        if(map[y][x] == 0) {
+            map[y][x] = 2;
+            ans++;
+        }
         
-        //드래곤 커브 그리기
-        while(g--) {
-            //저장된 방향을 역순으로 꺼냄
-            for(int a = (int)directions.size()-1; a>= 0; a--) {
-                //이전 방향에서 90도 꺾인 값 저장
-                int dir = directions[a];
-                directions.push_back(getDir(dir));
+        //큰 2번으로 다시 돌아가는 flag
+        int check = 0;
+        for(int i = 0; i < 4; i++) { //2.2
+            dir = getDir(dir);
+            int my = y + dy[dir];
+            int mx = x + dx[dir];
+            
+            if(map[my][mx] == 0) { //2.1
+                y = my;
+                x = mx;
+                check = 1; //2번 돌아가는 flag
+                break;
             }
         }
+        if(check == 1)
+            continue;
+        //2.3 후진하기
+        int backDir = getBackDir(dir);
         
-        //입력된 좌표 저장
-        map[y][x] = 1;
-        //나머지 좌표를 그림
-        for(int j = 0; j < (int)directions.size(); j++) {
-            int dir = directions[j];
-            if(dir == 0)
-                x++;
-            else if(dir == 1)
-                y--;
-            else if(dir == 2)
-                x--;
-            else
-                y++;
-            
-            map[y][x] = 1;
-        }
+        y = y + dy[backDir];
+        x = x + dx[backDir];
+        
+        //2.4 끝
+        if(map[y][x] == 1)
+            break;
     }
     
-    int result = 0;
-    for(int i = 0; i < 100; i++) {
-        for(int j = 0; j < 100; j++) {
-            if(map[i][j] && map[i][j+1] && map[i+1][j] && map[i+1][j+1])
-                result++;
-        }
-    }
-    
-    cout << result << endl;
-    
-    return 0;
+    cout << ans << endl;
 }
