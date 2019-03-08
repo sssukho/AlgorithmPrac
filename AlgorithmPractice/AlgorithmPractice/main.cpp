@@ -1,51 +1,40 @@
 #include <iostream>
-#include <vector>
 using namespace std;
-#define MAX 101
 
-int N;
-int cnt;
+int N, S;
+int val[20];
+int cnt, currentSum;
 
-int node[MAX];
-bool visited[MAX];
-bool cycle[MAX];
-
-bool DFS(int startNum, int nodeNum) {
-    if(visited[nodeNum])
-        return false;
+//current는 노드 번호를 말하는 것
+void dfs(int current) {
+    if(current == N)
+        return;
     
-    visited[nodeNum] = true;
-    
-    //사이클을 이루면
-    if(startNum == nodeNum || DFS(startNum, node[nodeNum])) {
+    // 현재까지의 합이 S면 결과 + 1
+    if(currentSum + val[current] == S)
         cnt++;
-        cycle[nodeNum] = true;
-        return true;
-    }
-    return false;
+    
+    // 이번 원소를 포함시키지 않고 시도
+    dfs(current + 1);
+    
+    // 이번 원소를 포함시키고 시도
+    // currentSum이 전역변수니까
+    currentSum = currentSum + val[current];
+    dfs(current+1);
+    
+    // 마지막에 다시 이번 원소를 빼줘야 함
+    currentSum = currentSum - val[current];
 }
 
 int main() {
     cout << "start" << endl;
-    cin.tie(0);
-    ios::sync_with_stdio(0);
+    cin >> N >> S;
     
-    cin >> N;
+    for(int i = 0; i < N; i++)
+        cin >> val[i];
     
-    for(int i = 1; i <= N; i++)
-        cin >> node[i];
-    
-    for(int i = 1; i <= N; i++) {
-        for(int j = 1; j <= N; j++)
-            visited[j] = cycle[j]; //이미 사이클을 이루는 집합은 재방문X
-        DFS(i, node[i]);
-    }
-    
+    dfs(0);
     cout << cnt << endl;
-    for(int i = 1; i <= N; i++)
-        if(cycle[i]) //사이클 이루는 노드들 출력
-            cout << i << " ";
-    cout << endl;
     
     return 0;
 }
