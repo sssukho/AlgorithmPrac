@@ -1,40 +1,70 @@
 #include <iostream>
+#include <stdio.h>
+#include <queue>
 using namespace std;
+#define MAX 1001
 
-int N, S;
-int val[20];
-int cnt, currentSum;
+struct pos{
+    int y;
+    int x;
+    int wallCnt;
+    int wayCnt;
+};
 
-//current는 노드 번호를 말하는 것
-void dfs(int current) {
-    if(current == N)
-        return;
-    
-    // 현재까지의 합이 S면 결과 + 1
-    if(currentSum + val[current] == S)
-        cnt++;
-    
-    // 이번 원소를 포함시키지 않고 시도
-    dfs(current + 1);
-    
-    // 이번 원소를 포함시키고 시도
-    // currentSum이 전역변수니까
-    currentSum = currentSum + val[current];
-    dfs(current+1);
-    
-    // 마지막에 다시 이번 원소를 빼줘야 함
-    currentSum = currentSum - val[current];
-}
+int dy[4] = {1, -1, 0, 0};
+int dx[4] = {0, 0, 1, -1};
+int map[MAX][MAX];
+bool visited[MAX][MAX][11]; //몇개 부쉈는지
+
+int N, M, K;
+queue<pos> q;
 
 int main() {
-    cout << "start" << endl;
-    cin >> N >> S;
-    
+    cout << "start\n";
+    cin >> N >> M >> K;
+
     for(int i = 0; i < N; i++)
-        cin >> val[i];
+        for(int j = 0; j < M; j++)
+            scanf("%1d", &map[i][j]);
     
-    dfs(0);
-    cout << cnt << endl;
-    
-    return 0;
+    q.push({0, 0, 0, 1});
+    visited[0][0][0] = true;
+
+    while(!q.empty()) {
+        int y = q.front().y;
+        int x = q.front().x;
+        int wallCnt = q.front().wallCnt;
+        int wayCnt = q.front().wayCnt;
+        q.pop();
+
+        if(y == N-1 && x == M-1) {
+            cout << wayCnt << endl;
+            return 0;
+        }
+
+        for(int i = 0; i < 4; i++) {
+            int my = y + dy[i];
+            int mx = x + dx[i];
+
+            if(my < 0 || my >= N || mx < 0 || mx >= M)
+                continue;
+
+            if(visited[my][mx][wallCnt])
+                continue;
+
+            //1은 이동할 수 없는 벽
+            if(map[my][mx] == 1) {
+                if(wallCnt < K) {
+                    visited[my][mx][wallCnt+1] = true;
+                    q.push({my, mx, wallCnt+1, wayCnt+1});
+                }
+                continue;
+            }
+            visited[my][mx][wallCnt] = true;
+            q.push({my, mx, wallCnt, wayCnt+1});
+        }
+    }
+
+    cout << "-1\n";
+
 }
