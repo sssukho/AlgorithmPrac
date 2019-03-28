@@ -1,100 +1,108 @@
 #include <iostream>
 #include <queue>
 using namespace std;
-#define MAX 11
+#define MAX 17
 
-int N, M;
-char board[MAX][MAX];
-int rx, ry, bx, by;
-bool visited[MAX][MAX][MAX][MAX];
-int dx[4] = {0, 0, 1, -1};
-int dy[4] = {1, -1, 0, 0};
+struct pipe {
+    int y;
+    int x;
+    int dir;
+};
+//0=세로, 1=가로, 2=대각선
+int dy[3] = {1, 0, 1};
+int dx[3] = {0, 1, 1};
+int board[MAX][MAX];
+int N;
+queue<pipe> q;
+int ans = 0;
 
-int bfs() {
-    queue<pair<pair<int, int>, pair<int, int>>> q;
-    q.push({ {rx, ry}, {bx, by} });
-    visited[rx][ry][bx][by] = true;
-    int cnt = 0;
+bool coverageCheck(int y, int x) {
+    if(y >= 0 && y < N && x >= 0 && x < N && board[y][x] != 1)
+        return true;
+    return false;
+}
+
+void simulation() {
+    q.push({0, 1, 1});
     
     while(!q.empty()) {
-        int qSize = (int)q.size();
+        int y = q.front().y;
+        int x = q.front().x;
+        int curDir = q.front().dir;
+        q.pop();
         
-        for(int j = 0; j < qSize; j++) {
-            int x = q.front().first.first;
-            int y = q.front().first.second;
-            int z = q.front().second.first;
-            int w = q.front().second.second;
-            q.pop();
-            
-            if(board[x][y] == 'O' && board[x][y] != board[z][w]) {
-                return cnt;
-            }
-            
-            for(int i = 0; i < 4; i++) {
-                int cx = x;
-                int cy = y;
-                int cz = z;
-                int cw = w;
-                
-                while(board[cx + dx[i]][cy + dy[i]] != '#' && board[cx][cy] != 'O'){
-                    cx = cx + dx[i];
-                    cy = cy + dy[i];
-                }
-                
-                while(board[cz + dx[i]][cw+dy[i]] != '#' && board[cz][cw] != 'O') {
-                    cz = cz + dx[i];
-                    cw = cw + dy[i];
-                }
-                
-                if(cx == cz && cy == cw) {
-                    if(board[cx][cy] == 'O')
-                        continue;
-                    
-                    if(abs(cx-x) + abs(cy-y) < abs(cz-z) + abs(cw-w)) {
-                        cz = cz - dx[i];
-                        cw = cw - dy[i];
-                    }
-                    else {
-                        cx = cx - dx[i];
-                        cy = cy - dy[i];
-                    }
-                }
-                
-                if(visited[cx][cy][cz][cw])
-                    continue;
-                q.push({ {cx, cy}, {cz, cw} });
-                visited[cx][cy][cz][cw] = true;
-            }
+        if(y == N-1 && x == N-1) {
+            ans++;
+            continue;
         }
         
-        if(cnt == 10)
-            return -1;
-        cnt++;
+        for(int i = 0; i < 3; i++) {
+            //0=세로, 1=가로, 2=대각선
+            int my = y + dy[i];
+            int mx = x + dx[i];
+            
+            if(coverageCheck(my, mx) == false)
+                continue;
+            
+            //현재상태가 가로로 있는 경우
+            if(curDir == 1) {
+                //세로로는 못움직임
+                if(i == 0)
+                    continue;
+                if(i == 1) {
+                    q.push({my, mx, 1});
+                }
+                if(i == 2) {
+                    if(coverageCheck(y+1, x) == true && coverageCheck(y+1, x+1) == true && coverageCheck(y, x+1) == true) {
+                        q.push({my, mx, 2});
+                    }
+                }
+            }
+            
+            //현재상태가 세로로 있는 경우
+            if(curDir == 0) {
+                if(i == 0) {
+                    q.push({my, mx, 0});
+                }
+                
+                //가로로는 못움직임
+                if(i == 1)
+                    continue;
+                
+                if(i == 2) {
+                    if(coverageCheck(y+1, x) == true && coverageCheck(y+1, x+1) == true && coverageCheck(y, x+1) == true) {
+                        q.push({my, mx, 2});
+                    }
+                }
+            }
+            
+            //현재상태가 대각선으로 있는 경우
+            if(curDir == 2) {
+                if(i == 0)
+                    q.push({my, mx, 0});
+                if(i == 1)
+                    q.push({my, mx, 1});
+                if(i == 2) {
+                    if(coverageCheck(y+1, x) == true && coverageCheck(y+1, x+1) == true && coverageCheck(y, x+1) == true) {
+                        q.push({my, mx, 2});
+                    }
+                }
+            }
+        }
     }
-    
-    
-    return -1;
 }
 
 int main() {
     cout << "start" << endl;
-    cin >> N >> M;
-    
+    cin >> N;
+    //빈칸은 0, 벽은 1
     for(int i = 0; i < N; i++) {
-        for(int j = 0; j < M; j++) {
+        for(int j = 0; j < N; j++) {
             cin >> board[i][j];
-            if(board[i][j] == 'R') {
-                rx = i;
-                ry = j;
-            }
-            else if(board[i][j] == 'B') {
-                bx = i;
-                by = j;
-            }
         }
     }
     
-    cout << bfs() << endl;
-    
+    simulation();
+    cout << ans << endl;
     return 0;
 }
