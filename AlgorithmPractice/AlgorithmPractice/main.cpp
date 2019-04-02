@@ -1,264 +1,149 @@
-//#include <iostream>
-//#include <algorithm>
-//#include <vector>
-//
-//using namespace std;
-//#define MAX 501
-//struct pos{
-//    int y1,y2,y3,y4;
-//    int x1,x2,x3,x4;
-//};
-//
-//int N, M; //세로, 가로
-//int board[MAX][MAX];
-//
-//int dy[4] = { 1, -1, 0, 0};
-//int dx[4] = { 0, 0, 1, -1};
-//
-//int ans = -98776;
-//vector<int> comb;
-//
-//bool isTetromino(pos input) {
-//    int y1 = input.y1, y2 = input.y2, y3 = input.y3, y4 = input.y4;
-//    int x1 = input.x1, x2 = input.x2, x3 = input.x3, x4 = input.x4;
-//
-//    //에메랄드색
-//    if(y1 == y2 && y2 == y3 && y3 == y4) {
-//        if(x1-x2 == -1 && x2-x3 == -1 && x3-x4 == -1)
-//            return true;
-//    }
-//    //에메랄드 색 회전
-//    if(x1 == x2 && x2 == x3 && x3 == x4) {
-//        if(y1-y2 == -1 && y2-y3 == -1 && y3-y4 == -1)
-//            return true;
-//    }
-//    //노랑색
-//    if(y1==y2 && y3==y4 && y1-y3==-1) {
-//        if(x1-x2 == -1 && x3-x4 == -1 && x1==x3)
-//            return true;
-//    }
-//
-//    //주황
-//    if(y1-y2 == -1 && y2-y3 == -1 && y3 == y4) {
-//        if(x1 == x2 && x2 == x3 && x3-x4 == -1)
-//            return true;
-//    }
-//
-//    //주황 회전1
-//    if(y1-y4 == -1 && y4 == y3 && y3 == y2) {
-//        if(x1 == x4 && x4-x3 == 1 && x3-x2 == 1)
-//            return true;
-//    }
-//
-//    //주황 회전2
-//    if(y1==y2 && y2-y3 == -1 && y3-y4 == -1) {
-//        if(x1-x2 == -1 && x2==x3 && x3==x4)
-//            return true;
-//    }
-//
-//    //주황 회전3
-//    if(y1==y2 && y2==y3 && y1-y4==-1) {
-//        if(x1==x4 && x1-x2==-1 && x2-x3==-1)
-//            return true;
-//    }
-//
-//    //주황 대칭1
-//    if(y1==y2 && y1-y3 == -1 && y3-y4 == -1) {
-//        if(x1-x2==-1 && x1==x3 && x3==x4)
-//            return true;
-//    }
-//
-//    //주황 대칭2
-//    if(y1-y2==-1 && y2-y4==-1 && y3==y4) {
-//        if(x1==x2 && x2==x4 && x3-x4==-1)
-//            return true;
-//    }
-//
-//    //주황 대칭3
-//    if(y1-y2==-1 && y2==y3 && y3==y4) {
-//        if(x1==x2 && x2-x3==-1 && x3-x4==-1)
-//            return true;
-//    }
-//
-//    //주황 대칭4
-//    if(y1==y2 && y2==y3 && y3-y4==-1) {
-//        if(x1-x2==-1 && x2-x3==-1 && x3==x4)
-//            return true;
-//    }
-//
-//    //초록색
-//    if(y1-y2==-1 && y2==y3 && y3-y4==-1) {
-//        if(x1==x2 && x2-x3 == -1 && x3==x4)
-//            return true;
-//    }
-//
-//    //초록 회전
-//    if(y1==y2 && y1-y3 == -1 && y3==y4) {
-//        if(x1-x2==-1 && x1==x4 && x3-x4 == -1)
-//            return true;
-//    }
-//
-//    //초록 대칭1
-//    if(y1-y3==-1 && y2==y3 && y2-y4==-1) {
-//        if(x1==x3 && x2-x3==-1 && x2==x4)
-//            return true;
-//    }
-//
-//    //초록 대칭2
-//    if(y1==y2 && y2-y3==-1 && y3==y4) {
-//        if(x1-x2==-1 && x2==x3 && x3-x4==-1)
-//            return true;
-//    }
-//
-//    //보라색
-//    if(y1-y2==-1 && y2==y3 && y3==y4) {
-//        if(x1==x3 && x2-x3 == -1 && x3-x4==-1)
-//            return true;
-//    }
-//
-//    //보라 회전1
-//    if(y1-y2==-1 && y2==y3 && y2-y4==-1) {
-//        if(x1==x2 && x2-x3==-1 && x2==x4)
-//            return true;
-//    }
-//
-//    //보라 회전2
-//    if(y1==y2 && y2==y3 && y2-y4==-1) {
-//        if(x1-x2==-1 && x2-x3==-1 &&x2==x4) {
-//            return true;
-//        }
-//    }
-//
-//    //보라 회전3
-//    if(y1-y3==-1 && y3-y4==-1 && y2==y3) {
-//        if(x1==x3 && x3==x4 && x2-x3==-1)
-//            return true;
-//    }
-//
-//    return false;
-//}
-//
-//int main() {
-//    cout << "start" << endl;
-//    cin >> N >> M; //세로 가로
-//
-//    for(int i = 0; i < N; i++)
-//        for(int j = 0; j < M; j++)
-//            cin >> board[i][j];
-//
-//    for(int i = 0; i < 4; i++) {
-//        comb.push_back(1);
-//    }
-//
-//    for(int i = 0; i < N*M-4; i++) {
-//        comb.push_back(0);
-//    }
-//
-//    //[i/5][i%5]
-//    vector<int> idx;
-//
-//    do {
-//        for(int i = 0; i < N*M; i++) {
-//            if(comb[i] == 1) {
-//                idx.push_back(i);
-//            }
-//        }
-//
-//        sort(idx.begin(), idx.end());
-//
-//        int y1 = idx[0]/M, y2 = idx[1]/M, y3 = idx[2]/M, y4 = idx[3]/M;
-//        int x1 = idx[0]%M, x2 = idx[1]%M, x3 = idx[2]%M, x4 = idx[3]%M;
-//
-//        pos p = { y1, y2, y3, y4, x1, x2, x3, x4 };
-//
-//        if(isTetromino(p)) {
-//            int sum = board[y1][x1] + board[y2][x2] + board[y3][x3] + board[y4][x4];
-//            ans = max(ans, sum);
-//        }
-//
-//        idx.clear();
-//    }while(prev_permutation(comb.begin(), comb.end()));
-//
-//
-//    cout << ans << endl;
-//    return 0;
-//}
-//////////////조합으로 풀면 시간초과/////////////
+/*
+ 모든 사람마다 계단으로 가는 시간 +1을 벡터에 저장하고 그 백터를 오름차순으로 정렬한다.
+ 그 다음 for문 돌면서 계단 내려가는 시간을 더해주는데 만약에 계단에 들억간 사람이 3명 보다 많은 경우엔
+ (3 인덱스 전 사람의 총 걸린 시간 - 본인 걸린 시간 + 계단 내려가는 시간)을 더해준다.
+ 그렇게 해서 가장 오래 걸린 시간을 ans에 저장
+ 그리고 result 최소값 갱신
+ */
 
 #include <iostream>
+#include <stdio.h>
+#include <vector>
 #include <algorithm>
 using namespace std;
-#define MAX 501
+#define MAX 11
+const int INF = 987654321;
 
-int dy[4] = {1, -1, 0, 0};
-int dx[4] = {0, 0, 1, -1};
-int N, M;
-int cell[MAX][MAX];
-bool visited[MAX][MAX];
+struct pos_people {
+    int y;
+    int x;
+};
 
-//전형적인 DFS
-int dfs(int y, int x, int cnt) {
-    if(cnt == 4)
-        return cell[y][x];
-    
-    int sum = 0;
-    
-    for(int i = 0; i < 4; i++) {
-        int my = y + dy[i];
-        int mx = x + dx[i];
-        
-        if(my >= 0 && my < N && mx >= 0 && mx < M) {
-            if(!visited[my][mx]) {
-                visited[my][mx] = true;
-                sum = max(sum, cell[y][x] + dfs(my, mx, cnt+1));
-                visited[my][mx] = false; //꼭 처리 해줘야 한다.
-            }
-        }
-    }
-    return sum;
-}
+struct pos_stair {
+    int y;
+    int x;
+    int time;
+};
 
-//dfs로 판별할 수 없는 테트로미노
-int middleFinger(int y, int x) {
-    int result = 0;
-    //ㅗ (현재 좌표 ㅡ의 가운데)
-    if (y >= 1 && x >= 1 && x < M - 1)
-        result = max(result, cell[y][x - 1] + cell[y][x] + cell[y - 1][x] + cell[y][x + 1]);
+int T, N;
+int map[MAX][MAX];
+vector<pos_people> people;
+vector<pos_stair> stair;
+vector<int> comb;
+vector<int> distance1;
+vector<int> distance2;
+
+int getTimeToStair(pos_people p, pos_stair s) {
+    int pr = p.y;
+    int pc = p.x;
+    int sr = s.y;
+    int sc = s.x;
     
-    //ㅏ (현재 좌표 ㅣ의 가운데)
-    if (y >= 1 && y < N - 1 && x < M - 1)
-        result = max(result, cell[y - 1][x] + cell[y][x] + cell[y][x + 1] + cell[y + 1][x]);
-    
-    //ㅜ (현재 좌표 ㅡ의 가운데)
-    if (y >= 1 && y < N - 1 && x < M - 1)
-        result = max(result, cell[y][x - 1] + cell[y][x] + cell[y + 1][x] + cell[y][x + 1]);
-    
-    //ㅓ (현재 좌표 ㅣ의 가운데)
-    if (y >= 1 && y < N - 1 && x >= 1)
-        result = max(result, cell[y - 1][x] + cell[y][x] + cell[y][x - 1] + cell[y + 1][x]);
-    
-    return result;
+    return abs(pr-sr) + abs(pc-sc) + 1;
 }
 
 int main() {
     cout << "start" << endl;
-    cin >> N >> M;
+    cin >> T;
     
-    for(int i = 0; i < N; i++)
-        for(int j = 0; j < M; j++)
-            cin >> cell[i][j];
-    
-    int result = 0;
-    for(int i = 0; i < N; i++) {
-        for(int j = 0; j < M; j++) {
-            visited[i][j] = true;
-            result = max(result, dfs(i, j, 1));
-            result = max(result, middleFinger(i, j));
-            visited[i][j] = false;
+    for(int t = 1; t <= T; t++) {
+        people.clear();
+        stair.clear();
+        
+        cin >> N;
+        
+        int result = INF;
+        
+        for(int i = 0; i < N; i++) {
+            for(int j = 0; j < N; j++) {
+                cin >> map[i][j];
+                
+                if(map[i][j] == 1) {
+                    people.push_back({i, j});
+                }
+                
+                
+                if(map[i][j] >= 2)
+                    stair.push_back({i, j, map[i][j]});
+            }
         }
+        
+        //한쪽으로 다 쏠린 경우도 생각해야하기 때문에 0부터 모든 사람 ㅇㅇ
+        for(int i = 0; i <= people.size(); i++) {
+            comb.clear();
+            
+            for(int j = 0; j < i; j++) {
+                comb.push_back(1);
+            }
+            
+            for(int j = 0; j < people.size() - i; j++) {
+                comb.push_back(0);
+            }
+            
+            do {
+                distance1.clear();
+                distance2.clear();
+                
+                for(int j = 0; j < people.size(); j++) {
+                    if(comb[j] == 1) {
+                        distance1.push_back(getTimeToStair(people[j], stair[0]));
+                    }
+                    else if(comb[j] == 0) {
+                        distance2.push_back(getTimeToStair(people[j], stair[1]));
+                    }
+                }
+                
+                sort(distance1.begin(), distance1.end());
+                sort(distance2.begin(), distance2.end());
+                
+                int cnt = 0;
+                int ans = 0;
+                
+                for(int j = 0; j < distance1.size(); j++) {
+                    cnt++;
+                    if(cnt <= 3)
+                        distance1[j] += stair[0].time;
+                    
+                    else {
+                        if(distance1[j-3] - distance1[j] > 0) {
+                            distance1[j] += (distance1[j-3]-distance1[j]+stair[0].time);
+                        }
+                        else {
+                            distance1[j] += stair[0].time;
+                        }
+                    }
+                    
+                    ans = max(ans, distance1[j]);
+                }
+                
+                cnt = 0;
+                
+                for(int j = 0; j < distance2.size(); j++) {
+                    cnt++;
+                    
+                    if(cnt <= 3)
+                        distance2[j] += stair[1].time;
+                    
+                    else {
+                        if(distance2[j-3] - distance2[j] > 0) {
+                            distance2[j] += (distance2[j-3]-distance2[j]+stair[1].time);
+                        }
+                        else {
+                            distance2[j] += stair[1].time;
+                        }
+                    }
+                    
+                    ans = max(ans, distance2[j]);
+                }
+                
+                result = min(result, ans);
+            }while(prev_permutation(comb.begin(), comb.end()));
+            
+        }
+        
+        printf("#%d %d\n", t, result);
     }
     
-    cout << result << endl;
     
     return 0;
 }
