@@ -1,80 +1,86 @@
 #include <iostream>
-#include <queue>
+#include <vector>
+#include <string>
+#include <stack>
+#include <utility>
+
 using namespace std;
-#define MAX 101
 
-struct pos {
-    int x1, y1, x2, y2;
-};
-
-int dy[4] = { 1, -1, 0, 0 };
-int dx[4] = { 0, 0, 1, -1 };
-bool visited[MAX][MAX];
-int M, N, K; //세로, 가로, 직사각형 개수
-vector<pos> recPos;
-vector<int> result;
-queue<pair<int, int>> q;
-int cellCount = 0;
-int areaCount = 0;
-
-void dfs(int y, int x) {
-    visited[y][x] = true;
+vector<int> solution(vector<int> heights) {
+    vector<int> answer;
+    stack<pair<int, int>> st;
+    stack<int> output;
     
-    for(int i = 0; i < 4; i++) {
-        int my = y + dy[i];
-        int mx = x + dx[i];
+    for(int i = 0; i < (int)heights.size(); i++) {
+        st.push(make_pair(heights[i], i));
+    }
+    
+    while(!st.empty()) {
+        int top = st.top().first;
+        int top_idx = st.top().second;
         
-        if(my >=1 && my <= M && mx >= 1 && mx <= N) {
-            if(!visited[my][mx]) {
-                cellCount++;
-                dfs(my, mx);
+        for(int i = top_idx; i >= 0; i--) {
+            if(heights[i] > top) {
+                output.push(i+1);
+                break;
             }
+            
+            if(i == 0)
+                output.push(0);
         }
-    }
-}
-
-void makeArea() {
-    for(int r = 0; r < recPos.size(); r++) {
-        int y1 = recPos[r].y1;
-        int x1 = recPos[r].x1;
-        int y2 = recPos[r].y2;
-        int x2 = recPos[r].x2;
         
-        for(int i = y1; i <= y2; i++)
-            for(int j = x1; j <= x2; j++)
-                visited[i][j] = true;
+        st.pop();
     }
+    
+    while(!output.empty()) {
+        answer.push_back(output.top());
+        output.pop();
+    }
+    
+    return answer;
 }
 
 int main() {
-    cout << "start" << endl;
-    cin >> M >> N >> K;
-    for(int k = 0; k < K; k++) {
-        int x1, y1, x2, y2;
-        cin >> x1 >> y1 >> x2 >> y2;
-        recPos.push_back({x1+1, y1+1, x2, y2});
-    }
+    vector<int> h1, h2, h3;
+    //h1 = {6, 9, 5, 7, 4};
+    h1.push_back(6);
+    h1.push_back(9);
+    h1.push_back(5);
+    h1.push_back(7);
+    h1.push_back(4);
+    //h2 = {3, 9, 9, 3, 5, 7, 2};
+    h2.push_back(3);
+    h2.push_back(9);
+    h2.push_back(9);
+    h2.push_back(3);
+    h2.push_back(5);
+    h2.push_back(7);
+    h2.push_back(2);
+    //h3 = {1, 5, 3, 6, 7, 6, 5};
+    h3.push_back(1);
+    h3.push_back(5);
+    h3.push_back(3);
+    h3.push_back(6);
+    h3.push_back(7);
+    h3.push_back(6);
+    h3.push_back(5);
     
-    makeArea();
+    vector<int> ans1, ans2, ans3;
+    ans1 = solution(h1);
+    ans2 = solution(h2);
+    ans3 = solution(h3);
     
-    for(int i = 1; i <= M; i++) {
-        for(int j = 1; j <= N; j++) {
-            if(!visited[i][j]) {
-                cellCount = 1;
-                dfs(i, j);
-                areaCount++;
-                result.push_back(cellCount);
-            }
-        }
-    }
-    
-    
-    sort(result.begin(), result.end());
-    
-    cout << areaCount << endl;
-    for(int i = 0; i < result.size(); i++) {
-        cout << result[i] << ' ';
-    }
+    for(auto x : ans1)
+        cout << x << ' ';
     cout << endl;
+    
+    for(auto x : ans2)
+        cout << x << ' ';
+    cout << endl;
+    
+    for(auto x : ans3)
+        cout << x << ' ';
+    cout << endl;
+    
     return 0;
 }
