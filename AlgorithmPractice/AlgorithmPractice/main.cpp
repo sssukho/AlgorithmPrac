@@ -1,62 +1,42 @@
-/*
- 1. 인쇄 대기목록의 가장 앞에 있는 문서(J)를 대기목록에서 꺼냅니다.
- 2. 나머지 인쇄 대기목록에서 J보다 중요도가 높은 문서가 한 개라도 존재하면 J를 대기목록의 가장 마지막에 넣습니다.
- 3. 그렇지 않으면 J를 인쇄합니다.
- */
-//a, b, c, d
-//2, 1, 3, 2
-
+//어떤 과학자가 발표한 논문 n편 중, h번 이상 인용된 논문이 h편 이상이고
+//나머지 논문이 h번 이하 인용되었다면 h가 이 과학자의 H-Index입니다.
 #include <iostream>
-#include <string>
 #include <vector>
-#include <queue>
-#include <utility>
+#include <string>
 #include <algorithm>
 
 using namespace std;
 
-int solution(vector<int> priorities, int location) {
+bool compare(int a, int b) {
+    if(a > b)
+        return true;
+    return false;
+}
+
+int solution(vector<int> citations) {
     int answer = 0;
-    int count = 0;
-    queue<pair<int, int>> q;
-    priority_queue<int> pq;
+    int n = (int)citations.size();
     
-    for(int i = 0; i < (int)priorities.size(); i++) {
-        //처음 대기목록 순서, 중요도
-        q.push(make_pair(i, priorities[i]));
-        //우선순위 큐에 작업 중요도
-        pq.push(priorities[i]);
-    }
+    sort(citations.begin(), citations.end(), compare);
     
-    while(!q.empty()) {
-        //출력순서가 왔을 때
-        if(q.front().second == pq.top()) {
-            //처음 대기 목록 순서와 문제에서 요청된 문서번호 같을 때
-            if(q.front().first == location)
-                return answer + 1;
-            else {
-                //출력 후 작업 큐와 우선순위 큐에서 문서를 하나씩 pop
-                answer++;
-                q.pop();
-                pq.pop();
-            }
-        }
-        else {
-            //출력순서가 아니므로 front에 있는 값을 큐의 맨뒤로 이동
-            q.push(q.front());
-            q.pop();
-        }
+    for(int i = 0; i < n; i++) {
+        if(i >= citations[i])
+            break;
+        answer++;
     }
     
     return answer;
 }
 
 int main() {
-    vector<int> pri1 = {2, 1, 3, 2};
-    vector<int> pri2 = {1, 1, 9, 1, 1, 1};
+    vector<int> c;
+    c.push_back(3);
+    c.push_back(0);
+    c.push_back(6);
+    c.push_back(1);
+    c.push_back(5);
     
-    cout << solution(pri1, 2) << endl;
-    cout << solution(pri2, 5) << endl;
+    cout << solution(c) << endl;
     
     return 0;
 }
